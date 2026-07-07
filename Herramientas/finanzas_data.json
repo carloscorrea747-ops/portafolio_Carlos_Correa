@@ -1,0 +1,48 @@
+{
+  "totalBalance": 79785764,
+  "categories": {
+    "Inversión": 14555000,
+    "Viaje": 21550000,
+    "Regalos": 5550000,
+    "Dermatología": 1865096,
+    "Estudio": 6603000,
+    "Dec. Renta": 4366645,
+    "SOAT/Tránsito": 2480000,
+    "Tecnologías": 4365000,
+    "Ropa": 800000
+  },
+  "expenses": [],
+  "payments": [
+    {
+      "id": 1751240001000,
+      "amount": 788173,
+      "source": "libre",
+      "card": "TC Bancolombia",
+      "date": "2026-06-30",
+      "note": "Pago extracto TC",
+      "totalAfter": 80153368,
+      "freeAfter": 18018627,
+      "createdAt": "2026-06-30T00:00:00.000Z"
+    },
+    {
+      "id": 1751240002000,
+      "amount": 458883,
+      "source": "libre",
+      "card": "TC Bancolombia",
+      "date": "2026-06-30",
+      "note": "Pago extracto TC",
+      "totalAfter": 79785764,
+      "freeAfter": 17650023,
+      "createdAt": "2026-06-30T00:01:00.000Z"
+    }
+  ],
+  "balanceLog": [
+    {
+      "date": "2026-06-30",
+      "old": 80941541,
+      "newAmount": 79785764,
+      "diff": -1155777,
+      "note": "Pagos TC $788.173 + $458.883 — saldo actualizado con rendimientos Nu incluidos"
+    }
+  ]
+}

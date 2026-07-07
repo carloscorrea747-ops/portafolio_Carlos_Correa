@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movilidad Segura | Seguros Bolívar</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.1/index.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00573F;
+            --primary-dark: #003D2B;
+            --secondary: #007A56;
+            --accent: #FFD100;
+            --accent-hover: #E6BC00;
+            --bg-light: #F4F6F8;
+            --bg-white: #FFFFFF;
+            --text-main: #1A1A1A;
+            --text-muted: #555555;
+            --text-light: #7A7A7A;
+            --border: #E0E0E0;
+            --error: #E53935;
+            --success: #007A56;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --radius: 12px;
+            --radius-lg: 16px;
+            --transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+            --max-width: 1140px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            color: var(--text-main);
+            background: var(--bg-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        a { text-decoration: none; color: inherit; transition: var(--transition); }
+        ul { list-style: none; }
+        img { max-width: 100%; display: block; }
+        
+        button, .btn {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--primary-dark);
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,209,0,0.4); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .btn-outline:hover { background: var(--primary); color: white; transform: translateY(-2px); }
+
+        .container { max-width: var(--max-width); margin: 0 auto; padding: 0 20px; }
+        .section { padding: 80px 0; scroll-margin-top: 80px; }
+        
+        .header {
+            background: var(--bg-white);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+            padding: 16px 0;
+        }
+        .nav { display: flex; align-items: center; justify-content: space-between; }
+        .nav-logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .nav-logo svg { height: 32px; width: 32px; fill: var(--accent); }
+        .nav-links { display: flex; gap: 24px; align-items: center; }
+        .nav-links a { font-weight: 500; color: var(--text-muted); font-size: 0.95rem; }
+        .nav-links a:hover { color: var(--primary); }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 100px 0 120px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%; right: -20%; width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(255,209,0,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero-content { display: flex; align-items: center; gap: 60px; position: relative; z-index: 1; }
+        .hero-text { flex: 1; }
+        .hero-visual { flex: 1; display: flex; justify-content: center; }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            backdrop-filter: blur(4px);
+        }
+        h1 { font-size: 3.2rem; font-weight: 800; line-height: 1.15; margin-bottom: 20px; }
+        .hero-sub { font-size: 1.2rem; opacity: 0.9; margin-bottom: 30px; max-width: 480px; }
+        .hero-price { font-size: 1.1rem; margin-bottom: 24px; display: flex; align-items: baseline; gap: 8px; }
+        .hero-price strong { color: var(--accent); font-size: 1.8rem; }
+        @media (max-width: 900px) {
+            .hero-content { flex-direction: column; text-align: center; }
+            .hero-visual { display: none; }
+            h1 { font-size: 2.5rem; }
+            .hero-sub { margin: 0 auto 30px; }
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-top: -60px;
+            position: relative;
+            z-index: 2;
+        }
+        .feature-card {
+            background: var(--bg-white);
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            border: 1px solid var(--border);
+        }
+        .feature-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: var(--secondary); }
+        .feature-icon {
+            width: 56px; height: 56px;
+            background: var(--bg-light);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+        }
+        .feature-icon svg { width: 28px; height: 28px; stroke: var(--primary); fill: none; stroke-width: 2; }
+        .feature-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
+        .feature-desc { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
+        .feature-value { color: var(--primary); font-weight: 700; margin-top: 12px; font-size: 0.9rem; }
+
+        .section-header { text-align: center; max-width: 640px; margin: 0 auto 50px; }
+        .section-header h2 { font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 16px; }
+        .section-header p { color: var(--text-muted); font-size: 1.05rem; }
+
+        .plans-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+        .plan-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 32px 24px;
+            text-align: center;
+            position: relative;
+            transition: var(--transition);
+        }
+        .plan-card.recommended {
+            border: 2px solid var(--accent);
+            box-shadow: 0 8px 32px rgba(255,209,0,0.15);
+        }
+        .plan-badge {
+            position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); color: var(--primary-dark);
+            padding: 4px 16px; border-radius: 20px;
+            font-weight: 700; font-size: 0.85rem;
+        }
+        .plan-name { font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+        .plan-price { font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+        .plan-period { font-size: 0.9rem; color: var(--text-light); margin-bottom: 20px; }
+        .plan-features { text-align: left; margin: 20px 0 30px; border-top: 1px solid var(--border); padding-top: 20px; }
+        .plan-features li { padding: 8px 0; font-size: 0.95rem; color: var(--text-muted); display: flex; align-items: flex-start; gap: 8px; }
+        .plan-features li::before { content: '✓'; color: var(--secondary); font-weight: 700; flex-shrink: 0; }
+        .plan-features li.missing { opacity: 0.5; }
+        .plan-features li.missing::before { content: '✕'; color: #CC0000; }
+
+        .simulator {
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid var(--border);
+        }
+        .sim-header { text-align: center; margin-bottom: 32px; }
+        .sim-header h3 { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
+        .sim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .sim-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; }
+        .sim-select, .sim-input, .form-control {
+            width: 100%; padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px; font-size: 1rem;
+            background: var(--bg-light);
+            transition: var(--transition);
+            font-family: inherit;
+        }
+        .sim-select:focus, .sim-input:focus, .form-control:focus { border-color: var(--primary); outline: none; background: white; }
+        .sim-actions { text-align: center; }
+        .validation-msg { color: var(--error); font-size: 0.85rem; margin-top: 6px; min-height: 20px; }
+        
+        .sim-result {
+            background: #E8F5F1;
+            border: 2px solid var(--secondary);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-top: 24px;
+            text-align: center;
+            display: none;
+            animation: slideUp 0.4s ease-out;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .sim-price { font-size: 2.4rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+        .sim-plan { font-size: 1.1rem; color: var(--secondary); font-weight: 600; }
+        .sim-disclaimer { font-size: 0.8rem; color: var(--text-light); margin-top: 12px; }
+
+        .interest-form-container {
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            box-shadow: var(--shadow-md);
+            max-width: 600px;
+            margin: 40px auto 0;
+            border: 1px solid var(--border);
+        }
+        .interest-form h3 { text-align: center; font-size: 1.6rem; margin-bottom: 24px; color: var(--primary); }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
+        .checkbox-group { display: flex; align-items: flex-start; gap: 10px; margin: 20px 0; font-size: 0.85rem; color: var(--text-muted); }
+        .checkbox-group input { margin-top: 3px; accent-color: var(--primary); cursor: pointer; }
+        .success-message {
+            background: #E8F5F1; border: 2px solid var(--secondary);
+            color: var(--primary); padding: 24px; border-radius: var(--radius);
+            text-align: center; margin-top: 20px; display: none;
+            animation: slideUp 0.4s ease-out;
+        }
+        
+        .footer { background: var(--primary-dark); color: white; padding: 60px 0 30px; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 40px; }
+        .footer h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: var(--accent); }
+        .footer ul li { margin-bottom: 10px; font-size: 0.9rem; opacity: 0.8; }
+        .footer ul li:hover { opacity: 1; color: var(--accent); }
+        .footer-bottom { border-top: 1px solid rgba(255,255,255,0.15); padding-top: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 0.8rem; opacity: 0.6; }
+        .badge-superfin { display: inline-block; background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; margin-bottom: 10px; }
+
+        /* === Estado válido de campos === */
+        .form-control.is-valid,
+        .sim-select.is-valid { border-color: var(--success); background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23007A56' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M20 6L9 17l-5-5'/></svg>"); background-repeat: no-repeat; background-position: right 14px center; background-size: 18px; padding-right: 44px; }
+        .form-control.is-invalid,
+        .sim-select.is-invalid { border-color: var(--error); }
+
+        /* === Reveal on scroll === */
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .reveal.in-view { opacity: 1; transform: translateY(0); }
+        .reveal-delay-1 { transition-delay: 0.08s; }
+        .reveal-delay-2 { transition-delay: 0.16s; }
+        .reveal-delay-3 { transition-delay: 0.24s; }
+        @media (prefers-reduced-motion: reduce) {
+            .reveal { opacity: 1; transform: none; transition: none; }
+            * { animation: none !important; transition-duration: 0.01ms !important; }
+        }
+
+        /* === Comparador de planes === */
+        .compare-toggle-wrap { text-align: center; margin-top: 32px; }
+        .compare-toggle {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-toggle:hover { background: var(--primary); color: white; }
+        .compare-toggle svg { width: 16px; height: 16px; transition: transform 0.3s ease; }
+        .compare-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+        .compare-panel { max-height: 0; overflow: hidden; transition: max-height 0.5s ease, margin-top 0.3s ease; margin-top: 0; }
+        .compare-panel[data-open="true"] { max-height: 1600px; margin-top: 32px; }
+        .compare-table-wrap { overflow-x: auto; background: var(--bg-white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+        .compare-table { width: 100%; border-collapse: collapse; min-width: 600px; font-size: 0.95rem; }
+        .compare-table caption { padding: 20px; font-weight: 700; color: var(--primary); text-align: left; font-size: 1.1rem; }
+        .compare-table th, .compare-table td { padding: 14px 18px; text-align: left; border-bottom: 1px solid var(--border); }
+        .compare-table thead th { background: var(--bg-light); color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .compare-table thead th.col-recommended { background: var(--accent); color: var(--primary-dark); }
+        .compare-table tbody th { font-weight: 500; color: var(--text-main); width: 30%; }
+        .compare-table td { color: var(--text-muted); }
+        .compare-table td.yes { color: var(--success); font-weight: 700; }
+        .compare-table td.no  { color: var(--text-light); }
+        .compare-table td.no::before { content: '—'; }
+        .compare-table td.col-recommended { background: rgba(255,209,0,0.06); }
+        .compare-table tbody tr:last-child th, .compare-table tbody tr:last-child td { border-bottom: none; }
+
+        /* === Responsive === */
+        @media (max-width: 600px) {
+            .section { padding: 56px 0; }
+            h1 { font-size: 2rem; }
+            .section-header h2 { font-size: 1.7rem; }
+            .simulator { padding: 24px 18px; }
+            .interest-form-container { padding: 24px 18px; }
+            .hero { padding: 72px 0 96px; }
+            .features-grid { margin-top: -40px; gap: 16px; }
+            .feature-card { padding: 22px 20px; }
+        }
+        @media (max-width: 480px) {
+            .form-grid-2 { grid-template-columns: 1fr !important; }
+            .sim-grid { grid-template-columns: 1fr; gap: 14px; }
+            .hero-price strong { font-size: 1.5rem; }
+            .plan-card { padding: 26px 20px; }
+            .plan-price { font-size: 1.9rem; }
+            .btn-primary, .btn-outline { padding: 12px 20px; font-size: 0.95rem; }
+            .container { padding: 0 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <a href="#" class="nav-logo">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2L4 5V11C4 15.4 7.6 19.8 12 21C16.4 19.8 20 15.4 20 11V5L12 2ZM10 14H14V16H10V14Z"/></svg>
+                    <span>Seguros Bolívar</span>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="#coberturas">Coberturas</a></li>
+                    <li><a href="#planes">Planes</a></li>
+                    <li><button class="btn-primary" style="padding: 10px 20px; font-size: 0.9rem;" onclick="smoothScrollTo('simulador')">Cotizar ahora</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero" id="inicio">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <span class="hero-badge">🚀 Nuevo producto digital</span>
+                    <h1>Microseguro digital para tu movilidad diaria</h1>
+                    <p class="hero-sub">Accidentes, daños a terceros y asistencia en carretera — todo gestionado desde la app Bolívar Conmigo.</p>
+                    <div class="hero-price">
+                        <span>Desde</span>
+                        <strong>$22.900</strong>
+                        <span>COP/mes</span>
+                    </div>
+                    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                        <button class="btn-primary" onclick="smoothScrollTo('simulador')">
+                            Cotizar mi seguro
+                            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+                        <a href="#coberturas" class="btn-outline" onclick="smoothScrollTo('coberturas', event)">Ver coberturas</a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <svg aria-hidden="true" width="320" height="300" viewBox="0 0 320 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Fondo tarjeta -->
+                        <rect x="20" y="20" width="280" height="260" rx="20" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                        <!-- Escudo principal -->
+                        <path d="M160 50 L200 68 L200 110 Q200 138 160 152 Q120 138 120 110 L120 68 Z" fill="#FFD100" opacity="0.95"/>
+                        <path d="M160 62 L192 78 L192 110 Q192 132 160 144 Q128 132 128 110 L128 78 Z" fill="#00573F"/>
+                        <!-- Checkmark en escudo -->
+                        <path d="M148 110 L157 119 L175 99" stroke="#FFD100" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <!-- Carro -->
+                        <rect x="60" y="178" width="88" height="34" rx="8" fill="rgba(255,255,255,0.18)"/>
+                        <rect x="72" y="165" width="64" height="22" rx="6" fill="rgba(255,255,255,0.25)"/>
+                        <circle cx="78" cy="214" r="9" fill="rgba(255,255,255,0.4)"/>
+                        <circle cx="78" cy="214" r="5" fill="rgba(255,255,255,0.8)"/>
+                        <circle cx="132" cy="214" r="9" fill="rgba(255,255,255,0.4)"/>
+                        <circle cx="132" cy="214" r="5" fill="rgba(255,255,255,0.8)"/>
+                        <!-- Moto -->
+                        <ellipse cx="234" cy="210" rx="14" ry="14" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="3"/>
+                        <ellipse cx="234" cy="210" rx="6" ry="6" fill="rgba(255,255,255,0.3)"/>
+                        <ellipse cx="270" cy="210" rx="14" ry="14" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="3"/>
+                        <ellipse cx="270" cy="210" rx="6" ry="6" fill="rgba(255,255,255,0.3)"/>
+                        <path d="M234 210 L248 185 L265 185 L270 210" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M248 185 L252 173 L262 173" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+                        <!-- Línea divisora -->
+                        <line x1="50" y1="240" x2="270" y2="240" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                        <!-- Stats abajo -->
+                        <rect x="50" y="252" width="68" height="18" rx="4" fill="rgba(255,209,0,0.25)"/>
+                        <text x="84" y="265" text-anchor="middle" fill="#FFD100" font-size="10" font-weight="700">24/7</text>
+                        <rect x="126" y="252" width="68" height="18" rx="4" fill="rgba(255,255,255,0.1)"/>
+                        <text x="160" y="265" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="9" font-weight="600">$2.000M</text>
+                        <rect x="202" y="252" width="68" height="18" rx="4" fill="rgba(255,255,255,0.1)"/>
+                        <text x="236" y="265" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="9" font-weight="600">Digital</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container" style="position: relative; margin-top: -40px; z-index: 5;">
+        <div class="features-grid" id="coberturas">
+            <div class="feature-card reveal">
+                <div class="feature-icon">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM11 7h2v6h-2V7zM11 15h2v2h-2v-2z"/></svg>
+                </div>
+                <div class="feature-title">Gastos médicos</div>
+                <div class="feature-desc">Hospitalización, cirugías y tratamientos derivados de accidentes en tu trayecto.</div>
+                <div class="feature-value">Hasta $2.000M COP</div>
+            </div>
+            <div class="feature-card reveal reveal-delay-1">
+                <div class="feature-icon">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM4 4h16a1 1 0 0 1 1 1v1H3V5a1 1 0 0 1 1-1z"/></svg>
+                </div>
+                <div class="feature-title">Daños a terceros</div>
+                <div class="feature-desc">Protege tu patrimonio si causas daños materiales o corporales a otros.</div>
+                <div class="feature-value">Hasta $2.000M COP</div>
+            </div>
+            <div class="feature-card reveal reveal-delay-2">
+                <div class="feature-icon">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 8h1V4a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1v4h1a2 2 0 0 1 2 2v2h8v-2a2 2 0 0 1 2-2zM4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8H4zM9 22v-5h6v5H9z"/></svg>
+                </div>
+                <div class="feature-title">Asistencia vial 24/7</div>
+                <div class="feature-desc">Solicita grúa o asistencia mecánica desde la app Bolívar Conmigo en minutos.</div>
+                <div class="feature-value">Ilimitadas al año</div>
+            </div>
+            <div class="feature-card reveal reveal-delay-3">
+                <div class="feature-icon">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM20 8v6M23 11h-6"/></svg>
+                </div>
+                <div class="feature-title">Conductor elegido</div>
+                <div class="feature-desc">Un conductor autorizado lleva tu vehículo a casa cuando no puedes hacerlo.</div>
+                <div class="feature-value">Hasta 5 usos / mes</div>
+            </div>
+        </div>
+    </div>
+
+    <section class="section" style="margin-top: 20px;">
+        <div class="container">
+            <div style="display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; align-items: flex-start;">
+                <div style="flex: 1; min-width: 280px; max-width: 400px;">
+                    <svg aria-hidden="true" width="100%" viewBox="0 0 400 340" fill="none" xmlns="http://www.w3.org/2000/svg" style="border-radius: 16px; display: block;">
+                        <!-- Fondo -->
+                        <rect width="400" height="340" rx="16" fill="#00573F"/>
+                        <!-- Camino -->
+                        <rect x="150" y="0" width="100" height="340" fill="rgba(255,255,255,0.06)"/>
+                        <line x1="200" y1="0" x2="200" y2="340" stroke="rgba(255,255,255,0.15)" stroke-width="3" stroke-dasharray="20 16"/>
+                        <!-- Horizonte / ciudad fondo -->
+                        <rect x="0" y="200" width="400" height="140" fill="rgba(0,0,0,0.15)"/>
+                        <rect x="30" y="170" width="30" height="30" fill="rgba(255,255,255,0.08)"/>
+                        <rect x="70" y="155" width="25" height="45" fill="rgba(255,255,255,0.08)"/>
+                        <rect x="310" y="160" width="35" height="40" fill="rgba(255,255,255,0.08)"/>
+                        <rect x="355" y="175" width="30" height="25" fill="rgba(255,255,255,0.08)"/>
+                        <!-- Escudo central grande -->
+                        <path d="M200 60 L240 78 L240 128 Q240 160 200 175 Q160 160 160 128 L160 78 Z" fill="#FFD100"/>
+                        <path d="M200 74 L230 90 L230 128 Q230 153 200 165 Q170 153 170 128 L170 90 Z" fill="#00573F"/>
+                        <path d="M187 122 L197 132 L217 108" stroke="#FFD100" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <!-- Carro principal -->
+                        <rect x="130" y="230" width="140" height="48" rx="10" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+                        <rect x="148" y="210" width="104" height="32" rx="8" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+                        <!-- Ventanas -->
+                        <rect x="156" y="215" width="40" height="20" rx="4" fill="rgba(255,255,255,0.4)"/>
+                        <rect x="204" y="215" width="40" height="20" rx="4" fill="rgba(255,255,255,0.4)"/>
+                        <!-- Ruedas -->
+                        <circle cx="158" cy="280" r="16" fill="#003D2B" stroke="rgba(255,255,255,0.4)" stroke-width="2.5"/>
+                        <circle cx="158" cy="280" r="7" fill="rgba(255,255,255,0.3)"/>
+                        <circle cx="242" cy="280" r="16" fill="#003D2B" stroke="rgba(255,255,255,0.4)" stroke-width="2.5"/>
+                        <circle cx="242" cy="280" r="7" fill="rgba(255,255,255,0.3)"/>
+                        <!-- Faro -->
+                        <rect x="264" y="240" width="8" height="14" rx="3" fill="#FFD100" opacity="0.9"/>
+                        <!-- Badge 80 años -->
+                        <rect x="24" y="24" width="110" height="28" rx="6" fill="rgba(255,209,0,0.2)" stroke="rgba(255,209,0,0.5)" stroke-width="1"/>
+                        <text x="79" y="43" text-anchor="middle" fill="#FFD100" font-size="11" font-weight="700" font-family="system-ui">80+ años contigo</text>
+                    </svg>
+                </div>
+                <div style="flex: 1; min-width: 300px;">
+                    <h2 style="font-size: 1.6rem; margin-bottom: 16px; color: var(--primary);">Así te acompañamos en el camino</h2>
+                    <p style="margin-bottom: 24px; color: var(--text-muted);">Respaldados por más de 80 años asegurando a los colombianos. Nuestros planes son 100% digitales, sin papeleos y con respuesta inmediata.</p>
+                    <ul style="display: flex; flex-direction: column; gap: 16px;">
+                        <li style="display: flex; gap: 12px; align-items: flex-start;">
+                            <span style="background: var(--accent); color: var(--primary-dark); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;">✓</span>
+                            <div>
+                                <strong>Respuesta oportuna</strong><br>
+                                <span style="font-size: 0.9rem; color: var(--text-muted);">Atendemos tus requerimientos en tiempo real. Asesores disponibles 24/7 ante cualquier emergencia.</span>
+                            </div>
+                        </li>
+                        <li style="display: flex; gap: 12px; align-items: flex-start;">
+                            <span style="background: var(--accent); color: var(--primary-dark); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;">✓</span>
+                            <div>
+                                <strong>App Bolívar Conmigo</strong><br>
+                                <span style="font-size: 0.9rem; color: var(--text-muted);">Gestiona tu seguro, solicita asistencias y descarga documentos desde la palma de tu mano.</span>
+                            </div>
+                        </li>
+                        <li style="display: flex; gap: 12px; align-items: flex-start;">
+                            <span style="background: var(--accent); color: var(--primary-dark); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;">✓</span>
+                            <div>
+                                <strong>Red de asistencia nacional</strong><br>
+                                <span style="font-size: 0.9rem; color: var(--text-muted);">Grúas y talleres aliados en las principales ciudades del país.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="planes" style="background: var(--bg-light);">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2>Elige el plan que más se adapta a ti</h2>
+                <p>Planes modulares — pagas solo por lo que necesitas. Precios sin IVA.</p>
+            </div>
+            <div class="plans-container">
+                <div class="plan-card reveal">
+                    <div class="plan-name">Esencial</div>
+                    <div class="plan-price">$274.800</div>
+                    <div class="plan-period">Pago anual / sin IVA</div>
+                    <ul class="plan-features">
+                        <li>Hasta $500M Gastos médicos</li>
+                        <li class="missing">Sin cobertura a terceros</li>
+                        <li>Asistencia en app 24/7</li>
+                        <li class="missing">Sin conductor elegido</li>
+                    </ul>
+                    <button class="btn-outline" style="width: 100%;" onclick="selectPlan('Esencial')">Cotizar</button>
+                </div>
+                <div class="plan-card recommended reveal reveal-delay-1">
+                    <div class="plan-badge">Recomendado</div>
+                    <div class="plan-name">Estándar</div>
+                    <div class="plan-price">$418.800</div>
+                    <div class="plan-period">Pago anual / 10% dto online</div>
+                    <ul class="plan-features">
+                        <li>Hasta $1.000M Gastos médicos</li>
+                        <li>Hasta $500M Daños a terceros</li>
+                        <li>Asistencia en app 24/7</li>
+                        <li class="missing">Sin conductor elegido</li>
+                    </ul>
+                    <button class="btn-primary" style="width: 100%;" onclick="selectPlan('Estandar')">Cotizar</button>
+                </div>
+                <div class="plan-card reveal reveal-delay-2">
+                    <div class="plan-name">Full</div>
+                    <div class="plan-price">$718.800</div>
+                    <div class="plan-period">Pago anual / sin IVA</div>
+                    <ul class="plan-features">
+                        <li>Hasta $2.000M Gastos médicos</li>
+                        <li>Hasta $2.000M Daños a terceros</li>
+                        <li>Asistencia en app 24/7</li>
+                        <li>Hasta 5 usos/mes Conductor elegido</li>
+                    </ul>
+                    <button class="btn-outline" style="width: 100%;" onclick="selectPlan('Full')">Cotizar</button>
+                </div>
+            </div>
+
+            <div class="compare-toggle-wrap">
+                <button type="button" class="compare-toggle" id="btn-compare" aria-expanded="false" aria-controls="compare-panel" onclick="toggleCompare()">
+                    Ver comparación completa
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+            </div>
+            <div class="compare-panel" id="compare-panel" data-open="false">
+                <div class="compare-table-wrap">
+                    <table class="compare-table">
+                        <caption>Detalle de coberturas por plan</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Característica</th>
+                                <th scope="col">Esencial</th>
+                                <th scope="col" class="col-recommended">Estándar</th>
+                                <th scope="col">Full</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">Gastos médicos</th>
+                                <td>$500M</td>
+                                <td class="col-recommended">$1.000M</td>
+                                <td>$2.000M</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Daños a terceros</th>
+                                <td class="no"></td>
+                                <td class="col-recommended">$500M</td>
+                                <td>$2.000M</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Asistencia vial 24/7</th>
+                                <td class="yes">Ilimitada</td>
+                                <td class="yes col-recommended">Ilimitada</td>
+                                <td class="yes">Ilimitada</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Grúa</th>
+                                <td>Hasta 50 km</td>
+                                <td class="col-recommended">Hasta 100 km</td>
+                                <td>Ilimitada</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Conductor elegido</th>
+                                <td class="no"></td>
+                                <td class="no col-recommended"></td>
+                                <td>5 usos/mes</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Auto de reemplazo</th>
+                                <td class="no"></td>
+                                <td class="no col-recommended"></td>
+                                <td>Hasta 5 días</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Red de talleres</th>
+                                <td>Básica</td>
+                                <td class="col-recommended">Premium</td>
+                                <td>Premium + exprés</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Tratamiento ambulatorio</th>
+                                <td class="no"></td>
+                                <td class="yes col-recommended">Incluido</td>
+                                <td class="yes">Incluido</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Segunda opinión médica</th>
+                                <td class="no"></td>
+                                <td class="no col-recommended"></td>
+                                <td class="yes">Incluida</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Deducible por evento</th>
+                                <td>$200.000</td>
+                                <td class="col-recommended">$100.000</td>
+                                <td>$0</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Vigencia</th>
+                                <td>12 meses</td>
+                                <td class="col-recommended">12 meses</td>
+                                <td>12 meses</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Exclusiones principales</th>
+                                <td colspan="3" style="font-size: 0.85rem; color: var(--text-light); font-style: italic;">Aplica a los tres planes: conducción bajo efectos de alcohol o sustancias, carreras o pruebas de velocidad, uso comercial sin declaración previa, conductor sin licencia vigente.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="simulador">
+        <div class="container">
+            <div class="simulator reveal">
+                <div class="sim-header">
+                    <h3>Cotiza tu seguro en segundos</h3>
+                    <p style="color: var(--text-muted);">Obtén tu precio personalizado basado en tu perfil y ciudad.</p>
+                </div>
+                <div class="sim-grid">
+                    <div class="sim-group">
+                        <label for="edad">Tu rango de edad</label>
+                        <select id="edad" class="sim-select">
+                            <option value="">Selecciona...</option>
+                            <option value="25-30">25 – 30 años</option>
+                            <option value="31-35">31 – 35 años</option>
+                            <option value="36-40">36 – 40 años</option>
+                            <option value="41-45">41 – 45 años</option>
+                            <option value="46-50">46 – 50 años</option>
+                        </select>
+                        <div class="validation-msg" id="msg-edad" role="alert" aria-live="polite"></div>
+                    </div>
+                    <div class="sim-group">
+                        <label for="genero">Género</label>
+                        <select id="genero" class="sim-select">
+                            <option value="">Selecciona...</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                            <option value="O">Otro / Prefiero no decir</option>
+                        </select>
+                        <div class="validation-msg" id="msg-genero" role="alert" aria-live="polite"></div>
+                    </div>
+                    <div class="sim-group">
+                        <label for="ciudad">Ciudad</label>
+                        <select id="ciudad" class="sim-select">
+                            <option value="">Selecciona...</option>
+                            <option value="Bogotá">Bogotá</option>
+                            <option value="Medellín">Medellín</option>
+                            <option value="Cali">Cali</option>
+                            <option value="Barranquilla">Barranquilla</option>
+                            <option value="Otra">Otra ciudad</option>
+                        </select>
+                        <div class="validation-msg" id="msg-ciudad" role="alert" aria-live="polite"></div>
+                    </div>
+                    <div class="sim-group">
+                        <label for="experiencia">Años de conducción</label>
+                        <select id="experiencia" class="sim-select">
+                            <option value="">Selecciona...</option>
+                            <option value="0-2">Menos de 2 años</option>
+                            <option value="2-5">2 – 5 años</option>
+                            <option value="6-10">6 – 10 años</option>
+                            <option value="10+">Más de 10 años</option>
+                        </select>
+                        <div class="validation-msg" id="msg-experiencia" role="alert" aria-live="polite"></div>
+                    </div>
+                    <div class="sim-group">
+                        <label for="vehiculo">Medio de transporte</label>
+                        <select id="vehiculo" class="sim-select">
+                            <option value="">Selecciona...</option>
+                            <option value="Carro">Carro</option>
+                            <option value="Moto">Moto</option>
+                            <option value="Bicicleta eléctrica">Bicicleta eléctrica</option>
+                            <option value="Patineta">Patineta</option>
+                        </select>
+                        <div class="validation-msg" id="msg-vehiculo" role="alert" aria-live="polite"></div>
+                    </div>
+                </div>
+                <div class="sim-grid" style="margin-bottom: 0;">
+                    <div class="sim-group" style="grid-column: 1 / -1;">
+                        <label for="plan-cotizador">Plan deseado</label>
+                        <select id="plan-cotizador" class="sim-select">
+                            <option value="">Selecciona un plan...</option>
+                            <option value="Esencial">Esencial — $500M médicos + $500M terceros</option>
+                            <option value="Estandar">Estándar — $1.000M médicos + $1.000M terceros</option>
+                            <option value="Full">Full — $2.000M médicos + $2.000M terceros</option>
+                        </select>
+                        <div class="validation-msg" id="msg-plan-cotizador" role="alert" aria-live="polite"></div>
+                    </div>
+                </div>
+                <div class="sim-actions" style="margin-top: 24px;">
+                    <button id="btn-cotizar" class="btn-primary" style="width: 100%; max-width: 280px; justify-content: center;" onclick="calcularPrecio()">
+                        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                        Calcular precio estimado
+                    </button>
+                </div>
+                <div id="resultado-simulador" class="sim-result">
+                    <div class="sim-price" id="sim-precio">--</div>
+                    <div class="sim-plan" id="sim-plan">--</div>
+                    <div id="sim-cobertura" style="font-size: 0.95rem; color: var(--text-muted); margin-top: 6px;"></div>
+                    <div id="sim-transporte" style="font-size: 0.9rem; color: var(--text-light); margin-top: 4px;"></div>
+                    <div id="sim-mensaje-riesgo" style="font-size: 0.9rem; color: var(--primary); font-style: italic; margin-top: 10px; padding: 10px; background: rgba(0,87,63,0.08); border-radius: 8px;"></div>
+                    <div class="sim-disclaimer" style="margin-top: 12px;">*Precio estimado sin IVA. Sujeto a validación final y condiciones particulares del riesgo.</div>
+                    <div style="margin-top: 20px;">
+                        <button class="btn-primary" style="font-size: 0.9rem; padding: 10px 20px;" onclick="smoothScrollTo('formulario')">Quiero este seguro →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="formulario" class="section" style="padding-top: 0;">
+        <div class="container">
+            <div class="interest-form-container">
+                <form class="interest-form" id="form-interes" novalidate onsubmit="event.preventDefault(); capturarInteres();">
+                    <h3>¿Te interesa este seguro?</h3>
+                    <p style="text-align: center; margin-bottom: 24px; color: var(--text-muted); font-size: 0.95rem;">Déjanos tus datos y un asesor te contacta en menos de 24 horas.</p>
+                    <div class="sim-group" style="margin-bottom: 16px;">
+                        <label for="plan-interes">Plan de tu interés</label>
+                        <select id="plan-interes" class="sim-select">
+                            <option value="Esencial">Esencial — desde $274.800/año</option>
+                            <option value="Estandar">Estándar — desde $418.800/año</option>
+                            <option value="Full">Full — desde $718.800/año</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="nombre">Nombre completo</label>
+                        <input type="text" id="nombre" class="form-control" placeholder="Tu nombre completo" autocomplete="name">
+                        <div class="validation-msg" id="msg-nombre" role="alert" aria-live="polite"></div>
+                    </div>
+                    <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" class="form-control" placeholder="tucorreo@email.com" autocomplete="email">
+                            <div class="validation-msg" id="msg-email" role="alert" aria-live="polite"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="celular">Celular</label>
+                            <input type="tel" id="celular" class="form-control" placeholder="300 000 0000" maxlength="10" autocomplete="tel-national" inputmode="numeric">
+                            <div class="validation-msg" id="msg-celular" role="alert" aria-live="polite"></div>
+                        </div>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="acepta-terminos">
+                        <label for="acepta-terminos">Autorizo el tratamiento de mis datos personales según la <a href="#" style="color: var(--secondary); text-decoration: underline;">Política de Privacidad</a> de Seguros Bolívar, conforme a la Ley 1581 de 2012.</label>
+                    </div>
+                    <div class="validation-msg" id="msg-acepta-terminos" role="alert" aria-live="polite" style="text-align: center; margin-bottom: 10px;"></div>
+                    <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+                        Sí, me interesa — contáctenme
+                    </button>
+                    <div id="exito-form" class="success-message" role="status" aria-live="polite">
+                        <svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" style="margin: 0 auto 10px;"><path d="M20 6L9 17l-5-5"/></svg>
+                        <strong style="font-size: 1.1rem;">¡Registro exitoso!</strong><br>
+                        Gracias, <span id="nombre-user"></span>. Un asesor de Seguros Bolívar te contactará en las próximas 24 horas.
+                        <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-muted);">Plan seleccionado: <strong id="plan-user">--</strong></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <h4>Seguros Bolívar</h4>
+                    <div class="badge-superfin">Vigilado por la Superfinanciera de Colombia</div>
+                    <p style="font-size: 0.9rem; opacity: 0.8; line-height: 1.6;">Más de 80 años protegiendo el patrimonio y la tranquilidad de los colombianos.</p>
+                </div>
+                <div>
+                    <h4>Atención al cliente</h4>
+                    <ul>
+                        <li>📞 01 8000 180 110</li>
+                        <li>📞 (601) 348 0000</li>
+                        <li>✉️ servicioalcliente@segurosbolivar.com</li>
+                        <li>🕒 Lun – Vie: 8 a.m. – 6 p.m.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Información legal</h4>
+                    <ul>
+                        <li><a href="#">Política de Privacidad</a></li>
+                        <li><a href="#">Términos y Condiciones</a></li>
+                        <li><a href="#">Defensor del Consumidor</a></li>
+                        <li><a href="#">Protección al Consumidor</a></li>
+                        <li><a href="#">SARLAFT</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 Seguros Bolívar S.A. · NIT 860.003.020-1 · Todos los derechos reservados.</span>
+                <span>Este es un prototipo MVP para validación interna — no constituye oferta comercial vinculante.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const HEADER_OFFSET = 80;
+
+        function smoothScrollTo(targetId, event = null) {
+            if (event) event.preventDefault();
+            const el = document.getElementById(targetId);
+            if (!el) return;
+            const y = el.getBoundingClientRect().top + window.pageYOffset - HEADER_OFFSET;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+
+        function setupRevealOnScroll() {
+            const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const targets = document.querySelectorAll('.reveal');
+            if (reduceMotion || !('IntersectionObserver' in window)) {
+                targets.forEach(el => el.classList.add('in-view'));
+                return;
+            }
+            const io = new IntersectionObserver((entries, observer) => {
+                entries.forEach(e => {
+                    if (e.isIntersecting) {
+                        e.target.classList.add('in-view');
+                        observer.unobserve(e.target);
+                    }
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+            targets.forEach(el => io.observe(el));
+        }
+
+        function debounce(fn, ms) {
+            let t;
+            return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('a[href^="#"]').forEach(a => {
+                if (a.getAttribute('href') !== '#') {
+                    a.addEventListener('click', e => smoothScrollTo(a.getAttribute('href').substring(1), e));
+                }
+            });
+
+            document.getElementById('celular').addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').slice(0, 10);
+            });
+
+            document.querySelectorAll('.sim-select').forEach(el => {
+                el.addEventListener('change', () => validateField(el.id));
+            });
+
+            ['nombre', 'celular', 'acepta-terminos'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const evt = el.type === 'checkbox' ? 'change' : 'blur';
+                el.addEventListener(evt, () => validateField(id));
+                if (id === 'celular') el.addEventListener('input', () => clearFieldState(id));
+            });
+
+            const emailEl = document.getElementById('email');
+            emailEl.addEventListener('blur', () => validateField('email'));
+            emailEl.addEventListener('input', debounce(() => {
+                if (emailEl.value.trim()) validateField('email');
+                else clearFieldState('email');
+            }, 500));
+
+            setupRevealOnScroll();
+        });
+
+        function setFieldState(id, state, msg = '') {
+            const input = document.getElementById(id);
+            const msgEl = document.getElementById(`msg-${id}`);
+            if (input) {
+                input.classList.remove('is-valid', 'is-invalid');
+                if (state === 'valid') input.classList.add('is-valid');
+                if (state === 'invalid') input.classList.add('is-invalid');
+            }
+            if (msgEl) msgEl.textContent = msg;
+        }
+
+        function showFieldMsg(id, msg) { setFieldState(id, 'invalid', msg); }
+        function clearFieldState(id)   { setFieldState(id, 'neutral'); }
+
+        const VALIDATORS = {
+            nombre:   v => v.trim().length >= 2 ? null : 'Ingresa al menos 2 caracteres',
+            email:    v => !v.trim() ? 'El email es obligatorio' : (validarEmail(v.trim()) ? null : 'Ingresa un correo electrónico válido'),
+            celular:  v => !v.trim() ? 'El celular es obligatorio' : (v.trim().length === 10 ? null : 'El celular debe tener 10 dígitos'),
+            'acepta-terminos': v => v ? null : 'Debes aceptar los términos y condiciones'
+        };
+
+        function getFieldValue(id) {
+            const el = document.getElementById(id);
+            return el.type === 'checkbox' ? el.checked : el.value;
+        }
+
+        function validateField(id) {
+            const el = document.getElementById(id);
+            if (!el) return true;
+            if (VALIDATORS[id]) {
+                const err = VALIDATORS[id](getFieldValue(id));
+                if (err) { showFieldMsg(id, err); return false; }
+                setFieldState(id, 'valid');
+                return true;
+            }
+            const val = getFieldValue(id);
+            if (!val) { showFieldMsg(id, 'Este campo es obligatorio'); return false; }
+            setFieldState(id, 'valid');
+            return true;
+        }
+
+        function toggleCompare() {
+            const panel = document.getElementById('compare-panel');
+            const btn = document.getElementById('btn-compare');
+            const open = panel.dataset.open === 'true';
+            panel.dataset.open = String(!open);
+            btn.setAttribute('aria-expanded', String(!open));
+            btn.firstChild.textContent = (open ? 'Ver comparación completa ' : 'Ocultar comparación ');
+        }
+
+        const PRECIOS_MENSUALES = { Esencial: 22900, Estandar: 34900, Full: 59900 };
+        const FACTOR_EDAD = { '25-30': 1.10, '31-35': 1.00, '36-40': 1.00, '41-45': 1.05, '46-50': 1.05 };
+        const FACTOR_GENERO = { M: 1.05, F: 1.00, O: 1.00 };
+        const FACTOR_EXPERIENCIA = { '0-2': 1.20, '2-5': 1.05, '6-10': 1.00, '10+': 1.00 };
+        const FACTOR_VEHICULO = { 'Carro': 1.00, 'Moto': 1.25, 'Bicicleta eléctrica': 1.12, 'Patineta': 1.15 };
+        const FACTOR_CIUDAD = { 'Bogotá': 1.10, 'Medellín': 1.10, 'Cali': 1.08, 'Barranquilla': 1.05, 'Otra': 1.00 };
+        const NOMBRE_PLAN = { Esencial: 'Esencial', Estandar: 'Estándar', Full: 'Full' };
+        const COBERTURA_PLAN = {
+            Esencial: '$500M médicos · $500M daños a terceros',
+            Estandar: '$1.000M médicos · $1.000M daños a terceros',
+            Full:     '$2.000M médicos · $2.000M daños a terceros'
+        };
+
+        function getVals(ids) {
+            return Object.fromEntries(ids.map(id => [id, document.getElementById(id).value]));
+        }
+
+        function calcularPrecio() {
+            const ids = ['edad', 'genero', 'ciudad', 'experiencia', 'vehiculo', 'plan-cotizador'];
+            ids.forEach(clearFieldState);
+
+            const vals = getVals(ids);
+            const firstEmpty = ids.find(id => !vals[id]);
+            if (firstEmpty) {
+                ids.forEach(id => { if (!vals[id]) showFieldMsg(id, 'Este campo es obligatorio'); });
+                document.getElementById(firstEmpty).focus();
+                return;
+            }
+
+            const planElegido = vals['plan-cotizador'];
+            const factor = (FACTOR_EDAD[vals.edad] || 1)
+                         * (FACTOR_GENERO[vals.genero] || 1)
+                         * (FACTOR_EXPERIENCIA[vals.experiencia] || 1)
+                         * (FACTOR_VEHICULO[vals.vehiculo] || 1)
+                         * (FACTOR_CIUDAD[vals.ciudad] || 1);
+
+            const primaMensual = Math.round(PRECIOS_MENSUALES[planElegido] * factor / 100) * 100;
+
+            let coberturaSugerida, mensajeRiesgo;
+            if (factor < 1.15) {
+                coberturaSugerida = 'Esencial';
+                mensajeRiesgo = 'Tu perfil aplica para una prima competitiva con cobertura esencial.';
+            } else if (factor <= 1.45) {
+                coberturaSugerida = 'Estandar';
+                mensajeRiesgo = 'Tu perfil sugiere una cobertura intermedia por nivel de exposición en movilidad.';
+            } else {
+                coberturaSugerida = 'Full';
+                mensajeRiesgo = 'Tu perfil presenta mayor exposición; te recomendamos una cobertura amplia.';
+            }
+
+            document.getElementById('sim-precio').textContent = `$${primaMensual.toLocaleString('es-CO')} COP/mes`;
+            document.getElementById('sim-plan').textContent = `Plan elegido: ${NOMBRE_PLAN[planElegido]}`;
+            document.getElementById('sim-cobertura').textContent = `Cobertura sugerida por tu perfil: ${NOMBRE_PLAN[coberturaSugerida]} · ${COBERTURA_PLAN[coberturaSugerida]}`;
+            document.getElementById('sim-transporte').textContent = `Medio de transporte: ${vals.vehiculo}`;
+            document.getElementById('sim-mensaje-riesgo').textContent = mensajeRiesgo;
+
+            document.getElementById('plan-interes').value = planElegido;
+
+            const resBox = document.getElementById('resultado-simulador');
+            resBox.style.display = 'block';
+            requestAnimationFrame(() => smoothScrollTo('resultado-simulador'));
+        }
+
+        function selectPlan(planId) {
+            document.getElementById('plan-interes').value = planId;
+            smoothScrollTo('formulario');
+        }
+
+        function validarEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function capturarInteres() {
+            const ids = ['nombre', 'email', 'celular', 'acepta-terminos'];
+            const results = ids.map(validateField);
+            if (!results.every(Boolean)) {
+                document.getElementById(ids[results.indexOf(false)]).focus();
+                return;
+            }
+
+            const nombre = document.getElementById('nombre').value.trim();
+            document.getElementById('nombre-user').textContent = nombre;
+            document.getElementById('plan-user').textContent = document.getElementById('plan-interes').value;
+
+            const form = document.getElementById('form-interes');
+            form.querySelectorAll(':scope > *:not(#exito-form)').forEach(el => { el.style.display = 'none'; });
+
+            const exito = document.getElementById('exito-form');
+            exito.style.display = 'block';
+            exito.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost &amp; Decline Generator — Chubb Latin America</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        :root {
+            --navy:        #002554;
+            --navy-700:    #003a7d;
+            --navy-500:    #0a5bb8;
+            --ink:         #1a2436;
+            --muted:       #5d6577;
+            --line:        #e3e7ee;
+            --paper:       #f6f4ee;
+            --paper-2:     #efece3;
+            --card:        #ffffff;
+            --gold:        #c9a227;
+            --gold-soft:   #f5edd2;
+            --green:       #1f7a4d;
+            --green-soft:  #e6f3ec;
+            --red:         #b3261e;
+            --red-soft:    #fcecea;
+            --shadow-sm:   0 1px 2px rgba(0,37,84,.06);
+            --shadow-md:   0 8px 28px -10px rgba(0,37,84,.22);
+            --shadow-lg:   0 24px 60px -22px rgba(0,37,84,.32);
+            --r:           14px;
+            --r-sm:        9px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+        body {
+            font-family: 'IBM Plex Sans', system-ui, sans-serif;
+            color: var(--ink);
+            min-height: 100vh;
+            background:
+                radial-gradient(1200px 600px at 85% -10%, rgba(10,91,184,.07), transparent 60%),
+                radial-gradient(900px 500px at -5% 110%, rgba(201,162,39,.08), transparent 55%),
+                var(--paper);
+        }
+
+        ::selection { background: var(--navy); color: #fff; }
+
+        /* ---------- HEADER ---------- */
+        header {
+            position: relative;
+            background:
+                linear-gradient(135deg, var(--navy) 0%, var(--navy-700) 58%, var(--navy-500) 130%);
+            color: #fff;
+            overflow: hidden;
+            border-bottom: 3px solid var(--gold);
+        }
+        header::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+            background-size: 38px 38px;
+            mask-image: radial-gradient(700px 300px at 80% 0%, #000, transparent 70%);
+            pointer-events: none;
+        }
+        .header-inner {
+            position: relative;
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 30px 32px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .header-logo {
+            width: 56px; height: 56px;
+            background: #fff;
+            border-radius: 14px;
+            display: grid; place-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 6px 20px -6px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.6);
+        }
+        .header-text h1 {
+            font-family: 'Fraunces', serif;
+            font-size: 30px; font-weight: 600; letter-spacing: -0.4px;
+            line-height: 1.05;
+        }
+        .header-text h1 .amp { color: rgba(255,255,255,.55); font-weight: 500; }
+        .header-text p {
+            font-size: 13.5px; opacity: .82; margin-top: 5px; font-weight: 400;
+            letter-spacing: .15px;
+        }
+        .header-tag {
+            margin-left: auto;
+            align-self: center;
+            display: flex; align-items: center; gap: 9px;
+            font-size: 12px; font-weight: 600; letter-spacing: .3px;
+            color: rgba(255,255,255,.92);
+            background: rgba(255,255,255,.1);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 30px;
+            padding: 7px 16px 7px 8px;
+            backdrop-filter: blur(6px);
+        }
+        .header-tag .pill-ico {
+            width: 28px; height: 28px;
+            display: grid; place-items: center;
+            background: var(--gold); color: var(--navy);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ---------- LAYOUT ---------- */
+        .container { max-width: 1080px; margin: 0 auto; padding: 36px 32px 12px; }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--r);
+            box-shadow: var(--shadow-md);
+            padding: 30px;
+            margin-bottom: 22px;
+            animation: rise .55s cubic-bezier(.2,.7,.2,1) both;
+        }
+        .card:nth-of-type(2) { animation-delay: .08s; }
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-title {
+            font-family: 'Fraunces', serif;
+            font-size: 18px; font-weight: 600; color: var(--navy);
+            margin-bottom: 4px;
+            display: flex; align-items: center; gap: 11px;
+            letter-spacing: -.2px;
+        }
+        .card-title .step {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px; font-weight: 500;
+            width: 26px; height: 26px;
+            display: grid; place-items: center;
+            background: var(--navy); color: #fff;
+            border-radius: 8px;
+            letter-spacing: 0;
+        }
+        .card-sub { font-size: 13px; color: var(--muted); margin: 0 0 22px 37px; }
+
+        /* ---------- DROP ZONE ---------- */
+        .drop-zone {
+            position: relative;
+            border: 1.5px dashed #c2cad8;
+            border-radius: var(--r);
+            padding: 46px 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .25s, background .25s, transform .25s;
+            background:
+                repeating-linear-gradient(45deg, rgba(0,37,84,.012) 0 12px, transparent 12px 24px),
+                #fbfcfe;
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--navy-500);
+            background: #f1f6fd;
+            transform: translateY(-2px);
+        }
+        .drop-zone.drag-over { border-style: solid; box-shadow: 0 0 0 4px rgba(10,91,184,.1); }
+        .drop-zone.has-file {
+            border-color: var(--green);
+            border-style: solid;
+            background: var(--green-soft);
+        }
+        .drop-zone input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+        .drop-icon {
+            width: 66px; height: 66px; margin: 0 auto 16px;
+            background: #e7eefb; border-radius: 18px;
+            display: grid; place-items: center;
+            transition: background .25s, transform .25s;
+        }
+        .drop-zone:hover .drop-icon { transform: translateY(-2px) rotate(-3deg); }
+        .drop-icon svg { width: 30px; height: 30px; color: var(--navy-500); }
+        .drop-zone.has-file .drop-icon { background: #cfead9; }
+        .drop-zone.has-file .drop-icon svg { color: var(--green); }
+        .drop-text-main { font-size: 16px; font-weight: 600; color: var(--navy); margin-bottom: 5px; }
+        .drop-text-sub  { font-size: 13px; color: var(--muted); }
+        .drop-zone.has-file .drop-text-main { color: var(--green); }
+        .file-name {
+            margin-top: 12px; font-size: 13px; font-weight: 500; color: var(--green);
+            display: none;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        .drop-zone.has-file .file-name { display: inline-block; }
+
+        /* ---------- BUTTONS ---------- */
+        .btn {
+            display: inline-flex; align-items: center; gap: 9px;
+            padding: 12px 24px; border: none; border-radius: var(--r-sm);
+            font-family: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer;
+            transition: transform .18s, box-shadow .18s, background .18s, opacity .18s;
+            letter-spacing: .1px;
+        }
+        .btn:active:not(:disabled) { transform: translateY(1px) scale(.99); }
+        .btn-primary { background: var(--navy); color: #fff; box-shadow: var(--shadow-sm); }
+        .btn-primary:hover:not(:disabled) { background: var(--navy-700); transform: translateY(-2px); box-shadow: 0 12px 24px -10px rgba(0,37,84,.55); }
+        .btn-primary:disabled { background: #c3cbd8; color: #eef1f6; cursor: not-allowed; }
+        .btn-secondary { background: #fff; color: var(--navy); box-shadow: inset 0 0 0 1.5px var(--navy); }
+        .btn-secondary:hover:not(:disabled) { background: var(--navy); color: #fff; transform: translateY(-2px); }
+        .btn-secondary:disabled { color: #aeb6c4; box-shadow: inset 0 0 0 1.5px #d4dae3; cursor: not-allowed; }
+
+        .btn-download {
+            background: var(--green-soft); color: var(--green);
+            padding: 8px 15px; font-size: 13px; border-radius: 8px;
+            border: none; cursor: pointer; font-family: inherit; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 6px;
+            transition: background .18s, transform .18s, color .18s;
+        }
+        .btn-download:hover { background: var(--green); color: #fff; transform: translateY(-1px); }
+
+        .action-bar { display: flex; gap: 12px; align-items: center; margin-top: 22px; flex-wrap: wrap; }
+
+        /* ---------- PROGRESS ---------- */
+        .progress-container { display: none; margin-top: 24px; }
+        .progress-label { font-size: 13px; color: var(--ink); margin-bottom: 9px; display: flex; justify-content: space-between; font-weight: 500; }
+        .progress-label #progressPct { font-family: 'IBM Plex Mono', monospace; color: var(--navy-500); }
+        .progress-bar-bg { height: 9px; background: var(--paper-2); border-radius: 10px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.06); }
+        .progress-bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--navy), var(--navy-500) 70%, var(--gold));
+            border-radius: 10px; transition: width .4s ease;
+        }
+
+        /* ---------- ALERTS ---------- */
+        .alert { padding: 13px 16px 13px 16px; border-radius: var(--r-sm); font-size: 13.5px; margin-top: 18px; display: none; line-height: 1.5; }
+        .alert-error { background: var(--red-soft); border: 1px solid #f1c6c2; color: #8a1c16; }
+        .alert-info  {
+            background: var(--gold-soft); color: #6b520f;
+            border: 1px solid #e7d59b;
+            display: flex; gap: 10px; align-items: flex-start;
+        }
+        .alert-info svg { flex-shrink: 0; margin-top: 1px; }
+        .alert-info strong { color: #503c08; }
+
+        /* ---------- RESULTS ---------- */
+        .results-section { display: none; }
+        .results-meta { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+        .meta-chip {
+            flex: 1; min-width: 150px;
+            background: linear-gradient(160deg, #fbfcfe, #f2f5fa);
+            border: 1px solid var(--line);
+            border-radius: var(--r-sm);
+            padding: 16px 18px;
+            position: relative; overflow: hidden;
+        }
+        .meta-chip::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+            background: var(--navy);
+        }
+        .meta-chip:nth-child(2)::before { background: var(--gold); }
+        .meta-chip:nth-child(3)::before { background: var(--green); }
+        .meta-chip .num { font-family: 'Fraunces', serif; font-size: 30px; font-weight: 600; color: var(--navy); line-height: 1; }
+        .meta-chip .lbl { font-size: 12px; color: var(--muted); margin-top: 7px; letter-spacing: .2px; text-transform: uppercase; font-weight: 500; }
+
+        .table-wrap { border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
+        .results-table { width: 100%; border-collapse: collapse; }
+        .results-table th {
+            background: var(--navy); color: #fff;
+            padding: 13px 16px; text-align: left; font-size: 12px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .6px;
+        }
+        .results-table td { padding: 13px 16px; font-size: 14px; border-bottom: 1px solid var(--line); }
+        .results-table tbody tr:last-child td { border-bottom: none; }
+        .results-table tbody tr { transition: background .15s; }
+        .results-table tbody tr:hover td { background: #f4f8fe; }
+        .country-badge { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--navy); }
+        .records-badge {
+            display: inline-block; background: #eaf0fb; color: var(--navy-500);
+            padding: 3px 11px; border-radius: 20px; font-size: 13px; font-weight: 600;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        .file-cell { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--muted); }
+
+        .note-box {
+            background: var(--gold-soft); border-left: 3px solid var(--gold);
+            border-radius: 0 var(--r-sm) var(--r-sm) 0; padding: 12px 16px;
+            font-size: 13px; color: #6b520f; margin-top: 20px; line-height: 1.5;
+        }
+
+        /* ---------- FOOTER ---------- */
+        footer { text-align: center; padding: 28px 20px 40px; font-size: 12.5px; color: var(--muted); }
+        footer .copy { font-weight: 500; }
+        footer .author { font-size: 12px; color: #97a0b0; margin-top: 5px; }
+        footer .author a { color: var(--navy-500); text-decoration: none; font-weight: 500; }
+        footer .author a:hover { text-decoration: underline; }
+
+        @media (max-width: 640px) {
+            .header-inner { flex-wrap: wrap; padding: 24px; }
+            .header-tag { margin-left: 0; }
+            .container { padding: 24px 18px 8px; }
+            .card { padding: 22px; }
+            .results-table th:nth-child(3), .results-table td:nth-child(3) { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <div class="header-logo">
+            <svg width="34" height="34" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="9" fill="#002554"/>
+                <path d="M8 20C8 13.373 13.373 8 20 8C26.627 8 32 13.373 32 20C32 26.627 26.627 32 20 32C13.373 32 8 26.627 8 20Z" fill="#fff" fill-opacity="0.14"/>
+                <path d="M14 20L18 24L26 16" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <div class="header-text">
+            <h1>Lost &amp; Decline Generator</h1>
+            <p>Chubb Latin America &mdash; Generación de archivos L&amp;D por país</p>
+        </div>
+        <span class="header-tag">
+            <span class="pill-ico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 4h7l4 4v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>
+                    <path d="M15 4v4h4"/>
+                    <path d="M4 8v11a2 2 0 0 0 2 2h9"/>
+                </svg>
+            </span>
+            7 países LATAM
+        </span>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="card">
+        <div class="card-title"><span class="step">01</span> Cargar archivo base</div>
+        <p class="card-sub">Sube el archivo consolidado <code>Base.xlsx</code> para separarlo por país.</p>
+
+        <div class="drop-zone" id="dropZone">
+            <input type="file" id="fileInput" accept=".xlsx,.xls" />
+            <div class="drop-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+            </div>
+            <div class="drop-text-main" id="dropTextMain">Arrastra tu archivo Base.xlsx aquí</div>
+            <div class="drop-text-sub">o haz clic para seleccionarlo</div>
+            <div class="file-name" id="fileName"></div>
+        </div>
+
+        <div class="alert alert-error" id="alertError"></div>
+        <div class="alert alert-info" id="alertInfo">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span><strong>Nota:</strong> Los países Brazil, Miami y Mexico no generan archivo L&amp;D y serán ignorados automáticamente.</span>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn btn-primary" id="btnGenerate" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Generar archivos
+            </button>
+            <button class="btn btn-secondary" id="btnDownloadAll" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Descargar todos
+            </button>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-label">
+                <span id="progressText">Procesando...</span>
+                <span id="progressPct">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card results-section" id="resultsSection">
+        <div class="card-title"><span class="step">02</span> Archivos generados</div>
+        <p class="card-sub">Descarga cada país de forma individual o todos a la vez.</p>
+        <div class="results-meta" id="resultsMeta"></div>
+        <div class="table-wrap">
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>País</th>
+                        <th>Registros</th>
+                        <th>Archivo</th>
+                        <th>Descargar</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody"></tbody>
+            </table>
+        </div>
+        <div class="note-box">
+            <strong>Nota:</strong> Los países Brazil, Miami y Mexico no generan archivo L&amp;D.
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    <div class="copy">&copy; 2026 Chubb Latin America &middot; Lost &amp; Decline Generator</div>
+    <div class="author">Desarrollado por Carlos Correa &mdash; <a href="mailto:carlos.correa@chubb.com">carlos.correa@chubb.com</a></div>
+</footer>
+
+<script>
+/*
+ * Lost & Decline Generator - Chubb Latin America
+ * Desarrollado por Carlos Correa - carlos.correa@chubb.com
+ * 2026
+ */
+(function () {
+    'use strict';
+
+    const COLUMNS = [
+        'Primary Key','Source','Country','Account','GWP',
+        'Effective','Expiration','Days To Effective','Past Due',
+        'Segment','Major LOB','Minor LOB','KAM','UDW','Broker',
+        'Status','Desc. Status','Booking Period','Large Brokers',
+        'Lost Desc.','Expiring Policy','NB/Renewal','Declinadas','Pérdidas'
+    ];
+
+    const COUNTRY_MAP = {
+        'Argentina':   'L&D Argentina.xlsx',
+        'Chile':       'L&D Chile.xlsx',
+        'Colombia':    'L&D Colombia.xlsx',
+        'Ecuador':     'L&D Ecuador.xlsx',
+        'Panama':      'L&D Panamá.xlsx',
+        'Peru':        'L&D Perú.xlsx',
+        'Puerto Rico': 'L&D Puerto Rico.xlsx'
+    };
+
+    const IGNORE = ['Brazil', 'Miami', 'Mexico'];
+
+    const FLAGS = {
+        'Argentina':   'ar',
+        'Chile':       'cl',
+        'Colombia':    'co',
+        'Ecuador':     'ec',
+        'Panama':      'pa',
+        'Peru':        'pe',
+        'Puerto Rico': 'pr'
+    };
+
+    const flagImg = code => `<img src="https://flagcdn.com/w40/${code}.png" width="24" height="16" style="border-radius:3px;object-fit:cover;vertical-align:middle;box-shadow:0 1px 3px rgba(0,0,0,.2);" alt="">`;
+
+    const CAT_REGIONAL = {
+        declinadas: [
+            'ACTIVIDAD FUERA DE APETITO',
+            'FALTA DE INFORMACIÓN',
+            'COINCIDENCIA EN LISTAS RESTRICTIVAS',
+            'DECLINADO POR EQUIPO COMERCIAL',
+            'DECLINADO POR LISTAS REGIONALES',
+            'EXPERIENCIA EN RECLAMACIONES',
+            'BROKER NO APROBADO POR CHUBB',
+            'NATURALEZA DEL RIESGO',
+            'NO HAY PRODUCTO CHUBB',
+            'OTRO MOTIVO',
+            'RESERVADO A OTRO BROKER',
+            'TIPO DE CONSTRUCCIÓN'
+        ],
+        perdidas: [
+            'BROKER PERDIÓ NEGOCIO',
+            'COBERTURA',
+            'DIFERENCIAS EN LAS CONDICIONES DE SUSCRIPCIÓN',
+            'NO HAY RESPUESTA DEL CLIENTE',
+            'OTROS MOTIVOS',
+            'PERMANECER CON EL MERCADO EXISTENTE',
+            'PRECIOS',
+            'TASA NO COMPETITIVA'
+        ]
+    };
+
+    const CAT_PR = {
+        declinadas: [
+            'ACTIVIDAD FUERA DE APETITO',
+            'FALTA DE INFORMACIÓN',
+            'RIESGO PROHIBIDO',
+            'DECLINADO POR EQUIPO COMERCIAL',
+            'OTRO MOTIVO'
+        ],
+        perdidas: [
+            'CERRADA CON OTRO BROKER',
+            'MEJOR CONDICION TECNICA COMERCIAL',
+            'MANTUVO ASEGURADORA ACTUAL',
+            'CERRO CON OTRA COMPAÑÍA',
+            'MEJOR TASA',
+            'OTROS'
+        ]
+    };
+
+    const HDR_BG   = 'FF1F3864';
+    const GOLD_BG  = 'FFFFD700';
+    const WHITE_FG = 'FFFFFFFF';
+    const BLACK_FG = 'FF000000';
+
+    let uploadedFile  = null;
+    let generatedData = {};
+
+    const $ = id => document.getElementById(id);
+    const dropZone          = $('dropZone');
+    const fileInput         = $('fileInput');
+    const dropTextMain      = $('dropTextMain');
+    const fileNameEl        = $('fileName');
+    const btnGenerate       = $('btnGenerate');
+    const btnDownloadAll    = $('btnDownloadAll');
+    const progressContainer = $('progressContainer');
+    const progressFill      = $('progressFill');
+    const progressText      = $('progressText');
+    const progressPct       = $('progressPct');
+    const alertError        = $('alertError');
+    const alertInfo         = $('alertInfo');
+    const resultsSection    = $('resultsSection');
+    const resultsBody       = $('resultsBody');
+    const resultsMeta       = $('resultsMeta');
+
+    const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+    /* ---------- helpers ---------- */
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const showProgress = () => progressContainer.style.display = 'block';
+    const hideProgress = () => progressContainer.style.display = 'none';
+    const setProgress  = (p, txt) => { progressFill.style.width = p + '%'; progressText.textContent = txt; progressPct.textContent = p + '%'; };
+    const showError    = msg => { alertError.textContent = msg; alertError.style.display = 'block'; };
+    const hideError    = () => alertError.style.display = 'none';
+    const reset        = () => { hideProgress(); btnGenerate.disabled = false; };
+    const downloadOne  = country => {
+        const { fileName, buffer } = generatedData[country];
+        saveAs(new Blob([buffer], { type: XLSX_MIME }), fileName);
+    };
+
+    /* ---------- drag & drop ---------- */
+    dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+
+    function handleFile(file) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['xlsx', 'xls'].includes(ext)) {
+            showError('Por favor sube un archivo Excel (.xlsx o .xls).');
+            return;
+        }
+        uploadedFile = file;
+        dropZone.classList.add('has-file');
+        dropTextMain.textContent = 'Archivo cargado correctamente';
+        fileNameEl.textContent = file.name;
+        btnGenerate.disabled = false;
+        btnDownloadAll.disabled = true;
+        generatedData = {};
+        resultsSection.style.display = 'none';
+        hideError();
+    }
+
+    /* ---------- generate ---------- */
+    btnGenerate.addEventListener('click', async () => {
+        if (!uploadedFile) return;
+        hideError();
+        btnGenerate.disabled = true;
+        btnDownloadAll.disabled = true;
+        resultsSection.style.display = 'none';
+        generatedData = {};
+
+        try {
+            setProgress(0, 'Leyendo archivo...');
+            showProgress();
+
+            const raw = await readExcel(uploadedFile);
+            if (!raw || raw.length < 2) { showError('El archivo no contiene datos.'); reset(); return; }
+
+            const headers = raw[0].map(h => String(h || '').trim());
+            const colIdx = {};
+            headers.forEach((h, i) => { colIdx[h] = i; });
+
+            if (colIdx['Country'] === undefined) {
+                showError('No se encontró la columna "Country". Verifica los encabezados del archivo.');
+                reset(); return;
+            }
+
+            setProgress(10, 'Separando datos por país...');
+
+            const byCountry = {};
+            const countryCol = colIdx['Country'];
+            for (let r = 1; r < raw.length; r++) {
+                const row = raw[r];
+                const country = String(row[countryCol] || '').trim();
+                if (!country || IGNORE.includes(country) || !COUNTRY_MAP[country]) continue;
+                (byCountry[country] ||= []).push(row);
+            }
+
+            const countries = Object.keys(byCountry);
+            if (countries.length === 0) {
+                showError('No se encontraron registros para los 7 países configurados.');
+                reset(); return;
+            }
+
+            for (let i = 0; i < countries.length; i++) {
+                const country  = countries[i];
+                const rows     = byCountry[country];
+                const fileName = COUNTRY_MAP[country];
+                const catalogs = country === 'Puerto Rico' ? CAT_PR : CAT_REGIONAL;
+
+                setProgress(15 + Math.round((i / countries.length) * 75), `Generando ${fileName}...`);
+
+                const buffer = await generateExcel(rows, colIdx, catalogs);
+                generatedData[country] = { fileName, buffer, count: rows.length };
+            }
+
+            setProgress(98, 'Preparando resultados...'); await sleep(180);
+            setProgress(100, 'Completado');
+            renderResults();
+            resultsSection.style.display = 'block';
+            btnDownloadAll.disabled = false;
+            btnGenerate.disabled = false;
+            await sleep(650);
+            hideProgress();
+
+        } catch (err) {
+            console.error(err);
+            showError('Error al procesar el archivo: ' + err.message);
+            reset();
+        }
+    });
+
+    btnDownloadAll.addEventListener('click', () => {
+        Object.keys(generatedData).forEach(downloadOne);
+    });
+
+    /* ---------- excel I/O ---------- */
+    function readExcel(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
+                    resolve(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false }));
+                } catch (err) { reject(err); }
+            };
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    async function generateExcel(rows, colIdx, catalogs) {
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'Chubb L&D Generator';
+        wb.created = new Date();
+
+        const ws = wb.addWorksheet('L&D', { views: [{ state: 'frozen', ySplit: 1 }] });
+
+        ws.columns = COLUMNS.map(col => ({
+            key: col,
+            width: col === 'Account' ? 30 : col === 'GWP' ? 12 : 15
+        }));
+
+        // header row
+        const hRow = ws.addRow(COLUMNS);
+        hRow.height = 20;
+        COLUMNS.forEach((col, ci) => {
+            const cell      = hRow.getCell(ci + 1);
+            const isSpecial = col === 'Declinadas' || col === 'Pérdidas';
+            cell.value = col;
+            cell.font  = { bold: true, name: 'Calibri', size: 11, color: { argb: isSpecial ? BLACK_FG : WHITE_FG } };
+            cell.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: isSpecial ? GOLD_BG : HDR_BG } };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        });
+
+        // data rows
+        for (const srcRow of rows) {
+            const values = COLUMNS.map(col => {
+                if (col === 'Declinadas' || col === 'Pérdidas') return '';
+                const idx = colIdx[col];
+                return idx !== undefined ? (srcRow[idx] ?? '') : '';
+            });
+            const dRow = ws.addRow(values);
+            dRow.height = 16;
+            COLUMNS.forEach((col, ci) => {
+                const cell = dRow.getCell(ci + 1);
+                cell.alignment = { vertical: 'middle' };
+                if (col === 'Declinadas' || col === 'Pérdidas') {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GOLD_BG } };
+                }
+            });
+        }
+
+        // dropdowns
+        const lastRow = rows.length + 1;
+        ws.dataValidations.add(`W2:W${lastRow}`, {
+            type: 'list', allowBlank: true,
+            formulae: [`"${catalogs.declinadas.join(',')}"`],
+            showErrorMessage: true, errorTitle: 'Valor inválido',
+            error: 'Seleccione un valor de la lista.'
+        });
+        ws.dataValidations.add(`X2:X${lastRow}`, {
+            type: 'list', allowBlank: true,
+            formulae: [`"${catalogs.perdidas.join(',')}"`],
+            showErrorMessage: true, errorTitle: 'Valor inválido',
+            error: 'Seleccione un valor de la lista.'
+        });
+
+        ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: COLUMNS.length } };
+
+        return await wb.xlsx.writeBuffer();
+    }
+
+    /* ---------- render ---------- */
+    function renderResults() {
+        const countries = Object.keys(generatedData);
+        const total = countries.reduce((s, c) => s + generatedData[c].count, 0);
+
+        resultsMeta.innerHTML = `
+            <div class="meta-chip"><div class="num">${countries.length}</div><div class="lbl">Países</div></div>
+            <div class="meta-chip"><div class="num">${total.toLocaleString()}</div><div class="lbl">Registros totales</div></div>
+            <div class="meta-chip"><div class="num">${countries.length}</div><div class="lbl">Archivos generados</div></div>
+        `;
+
+        resultsBody.innerHTML = '';
+        countries.forEach(country => {
+            const { fileName, count } = generatedData[country];
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="country-badge">
+                    ${flagImg(FLAGS[country] || 'un')}
+                    ${country}
+                </span></td>
+                <td><span class="records-badge">${count.toLocaleString()}</span></td>
+                <td class="file-cell">${fileName}</td>
+                <td><button class="btn-download" data-country="${country}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Descargar
+                </button></td>
+            `;
+            resultsBody.appendChild(tr);
+        });
+
+        resultsBody.querySelectorAll('[data-country]').forEach(btn => {
+            btn.addEventListener('click', () => downloadOne(btn.dataset.country));
+        });
+    }
+
+    alertInfo.style.display = 'flex';
+})();
+</script>
+</body>
+</html>
