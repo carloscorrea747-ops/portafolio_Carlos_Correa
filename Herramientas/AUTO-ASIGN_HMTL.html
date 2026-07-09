@@ -1,0 +1,1556 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoAsign — Asignador de Casos</title>
+<style>
+/* ═══════════ RESET & VARIABLES ═══════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D0F14;--surface:#141720;--card:#1A1E2B;--border:#252A3A;
+  --accent:#3D7EFF;--green:#22C55E;--yellow:#F59E0B;--red:#EF4444;
+  --muted:#5A6070;--text:#E8EAF0;--soft:#A0A8BC;
+  --radius:10px;--shadow:0 2px 12px rgba(0,0,0,.25);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ═══════════ SCROLLBAR ═══════════ */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* ═══════════ HEADER ═══════════ */
+header{background:rgba(20,23,32,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100}
+.logo{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),#6C5CE7);border-radius:9px;display:grid;place-items:center;font-size:17px;flex-shrink:0;box-shadow:0 0 18px rgba(61,126,255,.25)}
+.hd h1{font-size:16px;font-weight:700;letter-spacing:-.4px}
+.hd p{font-size:10.5px;color:var(--muted);font-family:'SF Mono',Consolas,monospace}
+
+/* ═══════════ STEPS ═══════════ */
+.steps{margin-left:auto;display:flex;align-items:center;gap:0}
+.step{display:flex;align-items:center;gap:6px}
+.step-n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;background:var(--border);color:var(--muted);transition:all .35s ease}
+.step-n.active{background:var(--accent);color:#fff;box-shadow:0 0 12px rgba(61,126,255,.35)}
+.step-n.done{background:var(--green);color:#fff}
+.step-lbl{font-size:10.5px;color:var(--muted);transition:color .3s}
+.step-lbl.active{color:var(--text)}
+.step-lbl.done{color:var(--green)}
+.step-line{width:32px;height:2px;background:var(--border);margin:0 6px;border-radius:1px;transition:background .4s}
+.step-line.done{background:var(--green)}
+
+/* ═══════════ MAIN ═══════════ */
+main{padding:24px 32px 48px;max-width:1180px;margin:0 auto}
+
+/* ═══════════ CARDS ═══════════ */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px;box-shadow:var(--shadow);transition:border-color .2s}
+.card:hover{border-color:#2F3548}
+.sec-title{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-family:'SF Mono',Consolas,monospace;margin-bottom:14px}
+
+/* ═══════════ DROP ZONE ═══════════ */
+.drop{border:2px dashed var(--border);border-radius:var(--radius);padding:52px 24px;text-align:center;cursor:pointer;transition:all .25s}
+.drop:hover,.drop.over{border-color:var(--accent);background:rgba(61,126,255,.05)}
+.drop.over{transform:scale(1.005)}
+.drop-icon{font-size:40px;margin-bottom:10px}
+.drop h3{font-size:14px;font-weight:600;margin-bottom:5px}
+.drop p{font-size:12px;color:var(--muted)}
+.file-info{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-top:14px}
+.file-info .fi-icon{font-size:28px}
+.file-info .fi-name{font-size:13px;font-weight:600}
+.file-info .fi-meta{font-size:11px;color:var(--muted);font-family:monospace}
+.file-info .fi-ok{color:var(--green);font-size:11px;font-weight:600;margin-left:auto}
+
+/* ═══════════ GRIDS ═══════════ */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;transition:border-color .2s}
+.info-card:hover{border-color:#2F3548}
+.info-card .ic{font-size:22px;margin-bottom:6px}
+.info-card h4{font-size:12px;font-weight:600;margin-bottom:3px}
+.info-card p{font-size:11px;color:var(--muted);font-family:monospace}
+
+/* ═══════════ BUTTONS ═══════════ */
+.btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .2s;box-shadow:0 2px 10px rgba(61,126,255,.2)}
+.btn:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 16px rgba(61,126,255,.3)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-sec{background:transparent;color:var(--soft);border:1px solid var(--border);border-radius:8px;padding:9px 16px;font-size:12px;cursor:pointer;transition:all .2s}
+.btn-sec:hover{border-color:var(--soft);color:var(--text)}
+.btn-green{background:var(--green);box-shadow:0 2px 10px rgba(34,197,94,.2)}
+.btn-green:hover{box-shadow:0 4px 16px rgba(34,197,94,.3)}
+.row-flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* ═══════════ BADGES ═══════════ */
+.badge{border-radius:5px;padding:3px 8px;font-size:10px;font-family:monospace;font-weight:600;white-space:nowrap}
+.badge-green{background:#22C55E18;color:var(--green);border:1px solid #22C55E33}
+.badge-yellow{background:#F59E0B18;color:var(--yellow);border:1px solid #F59E0B33}
+.badge-red{background:#EF444418;color:var(--red);border:1px solid #EF444433}
+.badge-blue{background:#3D7EFF18;color:var(--accent);border:1px solid #3D7EFF33}
+.badge-gray{background:#5A607018;color:var(--muted);border:1px solid #5A607033}
+
+/* ═══════════ TABLE ═══════════ */
+.tbl-wrap{position:relative}
+.tbl-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.filter-tabs{display:flex;gap:4px}
+.filter-tab{background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;transition:all .2s;font-family:inherit}
+.filter-tab:hover{color:var(--soft);border-color:#2F3548}
+.filter-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filter-count{opacity:.6;margin-left:3px}
+.search-box{margin-left:auto;position:relative}
+.search-box input{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 12px 6px 30px;font-size:11px;width:200px;outline:none;transition:border-color .2s;font-family:inherit}
+.search-box input:focus{border-color:var(--accent)}
+.search-box::before{content:'🔍';position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:11px}
+.tbl-scroll{max-height:380px;overflow-y:auto;border-radius:6px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+thead{position:sticky;top:0;z-index:2}
+th{text-align:left;font-size:10px;color:var(--muted);font-family:'SF Mono',Consolas,monospace;padding:9px 12px;background:var(--surface);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+td{padding:9px 12px;font-size:12px;border-bottom:1px solid #252A3A55;vertical-align:middle}
+tr:nth-child(even) td{background:rgba(255,255,255,.01)}
+tr:hover td{background:rgba(61,126,255,.04)}
+.tbl-footer{display:flex;justify-content:space-between;align-items:center;padding:10px 0 0;font-size:11px;color:var(--muted)}
+
+/* ═══════════ STATS ═══════════ */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:0 2px 2px 0}
+.stat.st-blue::after{background:var(--accent)}
+.stat.st-yellow::after{background:var(--yellow)}
+.stat.st-green::after{background:var(--green)}
+.stat.st-soft::after{background:var(--soft)}
+.stat-val{font-size:28px;font-weight:700;font-family:'SF Mono',Consolas,monospace}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* ═══════════ ANALYST LOAD ═══════════ */
+.analyst-item{display:flex;align-items:center;padding:9px 0;border-bottom:1px solid rgba(37,42,58,.5);gap:12px}
+.analyst-item:last-child{border-bottom:none}
+.analyst-rank{width:20px;text-align:center;font-size:10px;color:var(--muted);font-family:monospace;flex-shrink:0}
+.analyst-name{font-size:12px;font-weight:500;min-width:100px;flex-shrink:0}
+.analyst-counts{display:flex;align-items:center;gap:6px;font-family:monospace;font-size:11px;margin-left:auto;flex-shrink:0}
+.cnt-prev{color:var(--muted)}
+.cnt-new{color:var(--accent);font-weight:600}
+.cnt-total{color:var(--text);font-weight:700;min-width:22px;text-align:right}
+.load-bar-wrap{width:110px;height:7px;background:var(--border);border-radius:4px;overflow:hidden;display:flex;flex-shrink:0}
+.load-seg-prev{height:100%;background:var(--muted);transition:width .7s cubic-bezier(.23,1,.32,1)}
+.load-seg-new{height:100%;background:var(--accent);transition:width .7s cubic-bezier(.23,1,.32,1) .1s}
+.analyst-summary{display:flex;align-items:center;justify-content:space-between;padding:12px 0 0;margin-top:4px;border-top:1px solid var(--border);font-size:12px;font-weight:600}
+
+/* ═══════════ COPY BTN ═══════════ */
+.copy-btn{background:transparent;border:1px solid var(--border);color:var(--soft);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;transition:all .2s;font-family:inherit}
+.copy-btn:hover{border-color:var(--soft);color:var(--text)}
+
+/* ═══════════ TOAST SYSTEM ═══════════ */
+.toast-container{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column-reverse;gap:8px;pointer-events:none}
+.toast{pointer-events:auto;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;min-width:300px;max-width:420px;display:flex;align-items:center;gap:10px;font-size:12px;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:toastIn .35s cubic-bezier(.23,1,.32,1);transition:all .3s}
+.toast.out{opacity:0;transform:translateX(120px)}
+.toast-icon{font-size:18px;flex-shrink:0}
+.toast-msg{flex:1;line-height:1.4}
+.toast-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 0 0 8px;line-height:1}
+.toast-close:hover{color:var(--text)}
+.toast.t-success{border-color:#22C55E44}.toast.t-success .toast-icon{color:var(--green)}
+.toast.t-error{border-color:#EF444444}.toast.t-error .toast-icon{color:var(--red)}
+.toast.t-warning{border-color:#F59E0B44}.toast.t-warning .toast-icon{color:var(--yellow)}
+.toast.t-info{border-color:#3D7EFF44}.toast.t-info .toast-icon{color:var(--accent)}
+@keyframes toastIn{from{opacity:0;transform:translateX(120px)}to{opacity:1;transform:translateX(0)}}
+
+/* ═══════════ STEP TRANSITION ═══════════ */
+.step-panel{animation:fadeUp .4s cubic-bezier(.23,1,.32,1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════ SPINNER ═══════════ */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #ffffff44;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══════════ MISC ═══════════ */
+.hidden{display:none!important}
+#fileInput{display:none}
+.processing-bar{height:3px;background:linear-gradient(90deg,var(--accent),var(--green),var(--accent));background-size:200% 100%;border-radius:2px;animation:shimmer 1.5s ease infinite;margin-bottom:14px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.dl-preview{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px}
+.dl-preview h4{font-size:12px;font-weight:600;margin-bottom:8px}
+.dl-cols{display:flex;flex-wrap:wrap;gap:6px}
+.dl-col-tag{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--soft);font-family:monospace}
+.duration-badge{font-size:10px;color:var(--muted);font-family:monospace;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 8px}
+
+/* ═══════════ RESPONSIVE ═══════════ */
+@media(max-width:900px){
+  header{padding:12px 16px;flex-wrap:wrap}
+  .steps{margin-left:0;width:100%;justify-content:center;margin-top:8px}
+  main{padding:16px}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .grid2{grid-template-columns:1fr}
+  .grid3{grid-template-columns:1fr}
+  .tbl-toolbar{flex-direction:column;align-items:stretch}
+  .search-box{margin-left:0}
+  .search-box input{width:100%}
+}
+@media(max-width:520px){
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .step-lbl{display:none}
+  .analyst-counts{gap:4px;font-size:10px}
+  .load-bar-wrap{width:60px}
+}
+</style>
+
+<style id="spark-demo-css">
+#spark-demo-banner{position:sticky;top:0;z-index:9999;background:#C99A3E;color:#1B1B1B;
+ font:600 12px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:.02em;
+ text-align:center;padding:7px 14px;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.spark-demo-btn{display:inline-flex;align-items:center;gap:8px;cursor:pointer;
+ background:#1B3A5C;color:#F1EFE8;border:1px solid #1B3A5C;border-radius:8px;
+ padding:11px 18px;font:600 13px/1 system-ui,-apple-system,'Segoe UI',sans-serif;
+ letter-spacing:.01em;transition:all .18s ease;box-shadow:0 1px 3px rgba(27,58,92,.2)}
+.spark-demo-btn:hover{background:#C99A3E;border-color:#C99A3E;color:#1B1B1B;
+ transform:translateY(-1px);box-shadow:0 3px 8px rgba(201,154,62,.3)}
+.spark-demo-btn:active{transform:translateY(0)}
+.spark-demo-btn:disabled{opacity:.55;cursor:progress;transform:none}
+.spark-demo-wrap{display:flex;flex-direction:column;align-items:center;gap:7px;
+ margin:18px 0 4px;text-align:center}
+.spark-demo-note{font:400 11.5px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;
+ color:#7a7466;max-width:440px}
+.spark-demo-note b{color:#1B3A5C;font-weight:600}
+</style>
+
+<script id="spark-demo-engine">
+/* ============================================================================
+   SPARK · Demo Data Engine  ·  spark-demo.js
+   ----------------------------------------------------------------------------
+   Genera datos sintéticos deterministas para las herramientas del portafolio.
+   Todos los datos son FICTICIOS. Ningún dato real de Chubb es utilizado.
+
+   Uso:  cargar este archivo como script, luego:
+           SparkDemo.autoAsign()  ->  { 'MSD': {rows:[[{val,rgb}]]}, ... }
+           SparkDemo.casosAOA()   ->  [[header...],[row...]]
+           ...
+
+   Autor: Carlos Correa
+   ============================================================================ */
+(function (global) {
+  'use strict';
+
+  /* ── PRNG determinista (mulberry32) ─────────────────────────────────────── */
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  const SEED = 20260708;
+  let rand = mulberry32(SEED);
+  function reseed(s) { rand = mulberry32(s == null ? SEED : s); }
+
+  /* ── Primitivas de distribución ─────────────────────────────────────────── */
+  const rnd = () => rand();
+  const int = (lo, hi) => lo + Math.floor(rand() * (hi - lo + 1));
+  const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+
+  function wpick(obj) {
+    const ks = Object.keys(obj);
+    let t = 0; for (const k of ks) t += obj[k];
+    let r = rand() * t;
+    for (const k of ks) { r -= obj[k]; if (r <= 0) return k; }
+    return ks[ks.length - 1];
+  }
+
+  // Box-Muller. Normal truncada a [lo, hi].
+  function normal(mu, sd, lo, hi) {
+    let u = 0, v = 0;
+    while (u === 0) u = rand();
+    while (v === 0) v = rand();
+    let n = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    let x = mu + n * sd;
+    if (lo != null && x < lo) x = lo;
+    if (hi != null && x > hi) x = hi;
+    return x;
+  }
+
+  // Exponencial: cola larga a la derecha. Así se comportan las colas de espera.
+  function expo(mean, cap) {
+    const x = -Math.log(1 - rand()) * mean;
+    return cap != null && x > cap ? cap : x;
+  }
+
+  // Lognormal: Handle Time real es asimétrico, no simétrico.
+  function lognormal(median, sigma, cap) {
+    const x = median * Math.exp(normal(0, sigma, -3, 3));
+    return cap != null && x > cap ? cap : x;
+  }
+
+  /* ── Catálogos (ficticios) ──────────────────────────────────────────────── */
+  const PAISES = ['Colombia', 'México', 'Brasil', 'Chile', 'Argentina', 'Perú', 'Ecuador', 'Panamá', 'Puerto Rico'];
+  const LOBS = ['PROPERTY', 'CASUALTY', 'MARINE', 'FINANCIAL LINES'];
+
+  // Nombres claramente ficticios — nunca colaboradores reales.
+  const ANALISTAS = [
+    'Ana Demo', 'Bruno Ficticio', 'Carla Ejemplo', 'Diego Muestra',
+    'Elena Prueba', 'Fabio Sintético', 'Gabriela Test'
+  ];
+  const UNDERWRITERS = ['UW Demo Uno', 'UW Demo Dos', 'UW Demo Tres', 'UW Demo Cuatro'];
+  const BROKERS = ['Broker Demo A', 'Broker Demo B', 'Broker Demo C', 'Broker Demo D'];
+  const KAMS = ['KAM Demo 1', 'KAM Demo 2', 'KAM Demo 3'];
+
+  const STATUS_W = {
+    'Terminado': 0.72,
+    'No procesado por solicitud del UW': 0.09,
+    'No procesado por duplicidad': 0.05,
+    'No procesado por falta de información': 0.06,
+    'Pte Analista': 0.08
+  };
+
+  // Sesgos intencionales: hacen que los filtros REVELEN algo.
+  // Un país con peor SLA, un analista consistentemente más rápido.
+  const PAIS_BIAS = {
+    'Colombia': 0.92, 'México': 1.00, 'Brasil': 1.28, 'Chile': 0.95,
+    'Argentina': 1.10, 'Perú': 1.05, 'Ecuador': 1.02, 'Panamá': 0.98, 'Puerto Rico': 1.15
+  };
+  const ANALISTA_SPEED = {
+    'Ana Demo': 0.82, 'Bruno Ficticio': 1.05, 'Carla Ejemplo': 0.90,
+    'Diego Muestra': 1.22, 'Elena Prueba': 0.97, 'Fabio Sintético': 1.12, 'Gabriela Test': 1.00
+  };
+  const LOB_WEIGHT = { 'PROPERTY': 1.35, 'CASUALTY': 1.00, 'MARINE': 0.85, 'FINANCIAL LINES': 1.15 };
+
+  /* ── Fechas y días hábiles ──────────────────────────────────────────────── */
+  const pad = (n) => String(n).padStart(2, '0');
+
+  function fmtDT(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+  function fmtD(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  const isWeekend = (d) => d.getDay() === 0 || d.getDay() === 6;
+
+  // Volumen por día de semana: lunes pico, viernes valle. Un patrón operativo real.
+  const DOW_WEIGHT = { 1: 1.35, 2: 1.10, 3: 1.00, 4: 0.95, 5: 0.72 };
+
+  function bizDaysBack(n) {
+    const out = [];
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    while (out.length < n) {
+      if (!isWeekend(d)) out.push(new Date(d));
+      d.setDate(d.getDate() - 1);
+    }
+    return out.reverse();
+  }
+
+  // Hora de llegada dentro de la jornada (8:00–17:30), sesgada a la mañana.
+  function arrivalTime(day) {
+    const d = new Date(day);
+    const minsIntoDay = 480 + Math.floor(Math.abs(normal(0, 1, -3, 3)) * 95);
+    const m = Math.min(minsIntoDay, 1050);
+    d.setHours(Math.floor(m / 60), m % 60, int(0, 59), 0);
+    return d;
+  }
+
+  // Avanza `mins` minutos hábiles saltando noches y fines de semana.
+  function addBizMinutes(start, mins) {
+    const START = 8 * 60, END = 17 * 60 + 30;
+    let d = new Date(start);
+    let left = mins;
+    let guard = 0;
+    while (left > 0 && guard++ < 5000) {
+      if (isWeekend(d)) { d.setDate(d.getDate() + 1); d.setHours(8, 0, 0, 0); continue; }
+      const cur = d.getHours() * 60 + d.getMinutes();
+      if (cur < START) { d.setHours(8, 0, 0, 0); continue; }
+      if (cur >= END) { d.setDate(d.getDate() + 1); d.setHours(8, 0, 0, 0); continue; }
+      const room = END - cur;
+      const step = Math.min(room, left);
+      d = new Date(d.getTime() + step * 60000);
+      left -= step;
+    }
+    return d;
+  }
+
+  /* ── Núcleo: universo de casos ──────────────────────────────────────────── */
+  /* Todo se deriva de aquí. Un solo modelo, muchas vistas. */
+  function buildCases(opts) {
+    opts = opts || {};
+    const nDays = opts.days || 60;
+    const perDay = opts.perDay || 9;
+    const days = bizDaysBack(nDays);
+    const cases = [];
+    let seq = 1;
+
+    for (const day of days) {
+      const w = DOW_WEIGHT[day.getDay()] || 1;
+      const n = Math.max(1, Math.round(normal(perDay * w, perDay * 0.22, 1, perDay * 2.5)));
+
+      for (let i = 0; i < n; i++) {
+        const pais = pick(PAISES);
+        const lob = wpick({ 'PROPERTY': 0.38, 'CASUALTY': 0.31, 'MARINE': 0.14, 'FINANCIAL LINES': 0.17 });
+        const analista = pick(ANALISTAS);
+        const status = wpick(STATUS_W);
+
+        const recibido = arrivalTime(day);
+
+        // Cola: exponencial. Media ~7.3h hábiles — el cuello de botella real.
+        const queueMin = expo(7.3 * 60, 40 * 60) * PAIS_BIAS[pais];
+        const inicio = addBizMinutes(recibido, queueMin);
+
+        // Handle Time: lognormal (mediana ~57 min), modulado por analista y LOB.
+        const htBase = lognormal(57, 0.42, 420);
+        const handleMin = htBase * ANALISTA_SPEED[analista] * LOB_WEIGHT[lob];
+
+        const finGenext = addBizMinutes(inicio, handleMin);
+        const finMail = addBizMinutes(finGenext, normal(14, 6, 2, 60));
+        const sendDot = addBizMinutes(inicio, handleMin * 0.55);
+        const llegadaDot = addBizMinutes(sendDot, normal(9, 4, 1, 40));
+
+        const locations = (lob === 'PROPERTY' || lob === 'CASUALTY')
+          ? (rnd() < 0.05 ? int(101, 480) : int(1, 60))   // 5% supera 100 → excluido de SLA
+          : null;
+
+        const terminal = status === 'Terminado' ||
+          status.indexOf('duplicidad') > -1 ||
+          status.indexOf('falta de') > -1 ||
+          status.indexOf('solicitud del UW') > -1;
+
+        cases.push({
+          seq: seq++,
+          txnId: 'DEMO-TXN-' + String(100000 + seq).slice(1),
+          wvId: 'WV-' + String(200000 + seq).slice(1),
+          insured: 'Asegurado Demo ' + String(seq).padStart(4, '0'),
+          pais, lob, analista, status,
+          underwriter: pick(UNDERWRITERS),
+          recibido, inicio, finGenext, finMail, sendDot, llegadaDot,
+          queueMin, handleMin, locations, terminal,
+          cycleMin: null // se calcula abajo
+        });
+      }
+    }
+
+    // Cycle time hábil aproximado (recibido → finMail), en minutos.
+    for (const c of cases) c.cycleMin = Math.round(c.queueMin + c.handleMin + 14);
+    return cases;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     1) AUTO-ASIGN  ·  parser propio: {rows:[[{val,rgb}]]}
+     No usa SheetJS. Inyectamos la estructura post-parser directamente.
+     ══════════════════════════════════════════════════════════════════════════ */
+  /* Colores elegidos para que classifyFillColor() del tool devuelva el fit correcto.
+     Verificado: FF00B050→2 (especialista), FFF8696B→-1 (bloqueado), null→1 (neutro).
+     Ojo: FF63BE7B (verde Excel de escala) devuelve 1, no 2 — B=123 supera el umbral. */
+  const FILL_GREEN = 'FF00B050';  // especialista  → fit 2
+  const FILL_RED = 'FFF8696B';    // bloqueado     → fit -1
+  const FILL_NONE = null;         // neutro        → fit 1
+
+  function cell(v, rgb) { return { val: v == null ? null : v, rgb: rgb || null }; }
+  function rowOf(vals) { return vals.map(v => cell(v)); }
+
+  function autoAsign() {
+    reseed(SEED + 1);
+    const cases = buildCases({ days: 12, perDay: 7 });
+
+    /* El mapa de calor solo cubre estos 4 países × 2 LOBs. Restringimos los casos
+       al mismo universo para que la especialización sea visible en el resultado. */
+    const paisesHM = ['Brasil', 'México', 'Colombia', 'Chile'];
+    const lobsHM = ['PROPERTY', 'CASUALTY'];
+    cases.forEach(c => { c.pais = pick(paisesHM); c.lob = pick(lobsHM); });
+
+    /* --- Hoja: Casos - Analista --- */
+    const loads = {};
+    ANALISTAS.forEach(a => { loads[a] = int(3, 14); });
+    const casosAnalista = [rowOf(['Analista', 'Casos Pendientes'])];
+    ANALISTAS.forEach(a => casosAnalista.push(rowOf([a, loads[a]])));
+    casosAnalista.push(rowOf(['TOTAL', Object.values(loads).reduce((s, v) => s + v, 0)]));
+
+    /* --- Hoja: Pendientes (histórico → base de duplicados) --- */
+    const pendientes = [rowOf(['Transaction ID', 'Insured name', 'Pais', 'Lead product'])];
+    const histo = cases.slice(0, 40);
+    histo.forEach(c => pendientes.push(rowOf([c.txnId, c.insured, c.pais, c.lob])));
+
+    /* --- Hoja: MSD (casos nuevos; ~12% duplicados intencionales) --- */
+    const msd = [rowOf(['Transaction ID', 'Insured name', 'Ingestion date', 'Indexing',
+      'Workview ID', 'Pais', 'Lead product', 'Mail Subject'])];
+    const nuevos = cases.slice(40);
+    const dups = histo.slice(0, Math.round(nuevos.length * 0.12));
+    const msdRows = nuevos.concat(dups);
+
+    msdRows.forEach(c => {
+      msd.push(rowOf([
+        c.txnId, c.insured, fmtD(c.recibido), 'IDX-' + String(c.seq).padStart(4, '0'),
+        c.wvId, c.pais, c.lob, 'Solicitud demo · ' + c.insured
+      ]));
+    });
+
+    /* --- Hoja: Convenciones (mapa de calor por color de relleno) --- */
+    const hmPaises = paisesHM.map(p => p.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+
+    // Fila 0: país (merge simulado: solo primera col de cada bloque). Fila 1: LOB.
+    const r0 = [cell('')];
+    const r1 = [cell('')];
+    hmPaises.forEach(p => {
+      lobsHM.forEach((l, i) => { r0.push(cell(i === 0 ? p : '')); r1.push(cell(l)); });
+    });
+
+    const nCols = hmPaises.length * lobsHM.length;
+    const grid = ANALISTAS.map(() =>
+      Array.from({ length: nCols }, () => {
+        const roll = rnd();
+        return roll < 0.30 ? FILL_GREEN : (roll < 0.42 ? FILL_RED : FILL_NONE);
+      })
+    );
+
+    /* Guarda: si una columna quedara bloqueada para TODOS los analistas, esos casos
+       serían inasignables y el demo mostraría un resultado roto. Liberamos uno. */
+    for (let c = 0; c < nCols; c++) {
+      if (grid.every(row => row[c] === FILL_RED)) grid[int(0, ANALISTAS.length - 1)][c] = FILL_GREEN;
+    }
+
+    const conv = [r0, r1];
+    ANALISTAS.forEach((a, i) => {
+      conv.push([cell(a.toUpperCase())].concat(grid[i].map(f => cell('', f))));
+    });
+
+    return {
+      'Casos - Analista': { rows: casosAnalista },
+      'Pendientes': { rows: pendientes },
+      'MSD': { rows: msd },
+      'Convenciones': { rows: conv }
+    };
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     2) GENERADOR DE INFORME  ·  AOA (header + filas), sheet_to_json header:1
+     ══════════════════════════════════════════════════════════════════════════ */
+  function casosAOA() {
+    reseed(SEED + 2);
+    const cases = buildCases({ days: 75, perDay: 10 });
+    const header = [
+      'Fecha recibido MSD', 'Pais', 'LOB', 'Status del caso',
+      'Fecha recibido MSD Formato completo',
+      'Fecha y Hora Finalización del caso envio del Mail',
+      'Locations / # Escenarios', 'Fecha y Hora Inicio',
+      'Fecha y Hora Finalización por parte GENEXT/UW'
+    ];
+    const rows = [header];
+    cases.forEach(c => {
+      rows.push([
+        fmtD(c.recibido), c.pais, c.lob, c.status,
+        fmtDT(c.recibido),
+        c.terminal ? fmtDT(c.finMail) : '',
+        c.locations,
+        fmtDT(c.inicio),
+        c.terminal ? fmtDT(c.finGenext) : ''
+      ]);
+    });
+    return rows;
+  }
+
+  function calidadAOA() {
+    reseed(SEED + 3);
+    const rows = [['Pais', 'LOB', 'Año', 'Mes', 'Analista', 'Hallazgo']];
+    const now = new Date();
+    for (let i = 0; i < 95; i++) {
+      const back = int(0, 2);
+      const d = new Date(now.getFullYear(), now.getMonth() - back, 1);
+      rows.push([
+        pick(PAISES), pick(LOBS), d.getFullYear(), d.getMonth() + 1,
+        pick(ANALISTAS), 'Retroalimentación demo #' + (i + 1)
+      ]);
+    }
+    return rows;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     3) VALIDADOR  ·  necesita un ArrayBuffer .xlsx real (worker + XLSX.read)
+        Sembramos errores deliberados para que las reglas R1–R12 disparen.
+     ══════════════════════════════════════════════════════════════════════════ */
+  function validadorAOA() {
+    reseed(SEED + 4);
+    const cases = buildCases({ days: 45, perDay: 9 });
+    const header = [
+      'Transaction ID', 'Insured', 'Analista SD', 'UnderWriter', 'LOB',
+      'Status del caso', '# Locations / # Escenarios',
+      'Fecha recibido MSD Formato completo',
+      'Fecha y Hora Inicio',
+      'Fecha y Hora Finalizacion por parte GENEXT/UW',
+      'Fecha / Hora Send to DotCat',
+      'Fecha / Hora llegada to DotCat',
+      'Fecha y Hora Finalizacion del caso envio del Mail'
+    ];
+    const rows = [header];
+
+    cases.forEach((c, idx) => {
+      let insured = c.insured;
+      let inicio = c.terminal || c.status === 'Pte Analista' ? fmtDT(c.inicio) : '';
+      let finGx = c.terminal ? fmtDT(c.finGenext) : '';
+      let finMail = c.terminal ? fmtDT(c.finMail) : '';
+      let sendDot = fmtDT(c.sendDot);
+      let llegDot = fmtDT(c.llegadaDot);
+      let uw = c.underwriter;
+      let loc = c.locations;
+
+      // ── Errores sembrados (~9% de filas). Rotan por tipo de regla. ──
+      const roll = rnd();
+      if (roll < 0.09) {
+        switch (idx % 6) {
+          case 0: insured = ''; break;                                  // R1
+          case 1: inicio = fmtDT(new Date(c.recibido.getTime() - 36e5)); break; // R2
+          case 2: if (c.status === 'Terminado') finMail = ''; break;    // R3
+          case 3: uw = ''; break;                                       // R8
+          case 4: if (c.lob === 'PROPERTY') loc = ''; break;            // R9
+          case 5: llegDot = fmtDT(new Date(c.sendDot.getTime() - 18e5)); break; // R7
+        }
+      }
+
+      rows.push([
+        c.txnId, insured, c.analista, uw, c.lob, c.status, loc,
+        fmtDT(c.recibido), inicio, finGx, sendDot, llegDot, finMail
+      ]);
+    });
+    return rows;
+  }
+
+  // Construye .xlsx en memoria. Requiere SheetJS ya cargado en la página.
+  function xlsxBuffer(aoa, sheetName) {
+    if (typeof XLSX === 'undefined') throw new Error('SheetJS no disponible');
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Base Casos');
+    return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  }
+
+  function xlsxFile(aoa, sheetName, fileName) {
+    const buf = xlsxBuffer(aoa, sheetName);
+    return new File([buf], fileName || 'DEMO.xlsx',
+      { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     4) LnD GENERATOR  ·  recibe un File; columnas exactas de COLUMNS
+     ══════════════════════════════════════════════════════════════════════════ */
+  const LND_COLS = [
+    'Primary Key', 'Source', 'Country', 'Account', 'GWP',
+    'Effective', 'Expiration', 'Days To Effective', 'Past Due',
+    'Segment', 'Major LOB', 'Minor LOB', 'KAM', 'UDW', 'Broker',
+    'Status', 'Desc. Status', 'Booking Period', 'Large Brokers',
+    'Lost Desc.', 'Expiring Policy', 'NB/Renewal', 'Declinadas', 'Pérdidas'
+  ];
+  const LND_COUNTRIES = ['Argentina', 'Chile', 'Colombia', 'Ecuador', 'Panama', 'Peru', 'Puerto Rico'];
+
+  function lndAOA() {
+    reseed(SEED + 5);
+    const rows = [LND_COLS.slice()];
+    const today = new Date();
+
+    for (let i = 0; i < 260; i++) {
+      const country = pick(LND_COUNTRIES);
+      const eff = new Date(today); eff.setDate(eff.getDate() + int(-70, 130));
+      const exp = new Date(eff); exp.setFullYear(exp.getFullYear() + 1);
+      const dte = Math.round((eff - today) / 864e5);
+
+      rows.push([
+        'PK-' + String(10000 + i), 'DEMO', country,
+        'Cuenta Demo ' + String(i + 1).padStart(3, '0'),
+        Math.round(lognormal(48000, 0.9, 900000)),
+        fmtD(eff), fmtD(exp), dte, dte < 0 ? 'Yes' : 'No',
+        wpick({ 'Corporate': 0.4, 'Middle Market': 0.45, 'Small': 0.15 }),
+        pick(['Property', 'Casualty', 'Marine', 'Financial Lines']),
+        pick(['Fire', 'GL', 'Cargo', 'D&O', 'Auto']),
+        pick(KAMS), pick(UNDERWRITERS), pick(BROKERS),
+        wpick({ 'Quoted': 0.42, 'Bound': 0.26, 'Declined': 0.17, 'Lost': 0.15 }),
+        'Estado demo', fmtD(today).slice(0, 7),
+        rnd() < 0.3 ? 'Yes' : 'No',
+        '', 'POL-DEMO-' + String(5000 + i),
+        rnd() < 0.55 ? 'Renewal' : 'NB',
+        '', ''
+      ]);
+    }
+    return rows;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     5) BITÁCORA DE ERRORES  ·  JSON {records, hubs, types}
+     ══════════════════════════════════════════════════════════════════════════ */
+  function bitacoraJSON() {
+    reseed(SEED + 6);
+    const hubs = [
+      { id: 'MX-SD', label: 'HUB MX · SD', pais: 'México', team: 'SD', cost: 3000, diasMes: 21, horasDia: 7 },
+      { id: 'COL-SD', label: 'HUB COL · SD', pais: 'Colombia', team: 'SD', cost: 1700, diasMes: 21, horasDia: 7 },
+      { id: 'BR-UWX', label: 'HUB BRASIL · UWX', pais: 'Brasil', team: 'UWX', cost: 2850, diasMes: 21, horasDia: 6.5 },
+      { id: 'COL-UWX', label: 'HUB COL · UWX', pais: 'Colombia', team: 'UWX', cost: 2400, diasMes: 21, horasDia: 7 },
+      { id: 'MX-UWX', label: 'HUB MX · UWX', pais: 'México', team: 'UWX', cost: 2700, diasMes: 21, horasDia: 7 }
+    ];
+    const types = [
+      { name: 'ERROR VDI', color: '#185FA5' }, { name: 'ERROR INTERNET', color: '#854F0B' },
+      { name: 'ERROR GENNEXT', color: '#0F6E56' }, { name: 'ERROR GENERAL', color: '#8A2F3B' }
+    ];
+    const tipoW = { 'ERROR VDI': 0.38, 'ERROR INTERNET': 0.24, 'ERROR GENNEXT': 0.23, 'ERROR GENERAL': 0.15 };
+
+    const records = [];
+    const days = bizDaysBack(110);
+    let id = Date.now() - 9e6;
+
+    for (const day of days) {
+      if (rnd() > 0.30) continue;  // ~30% de días hábiles con incidente
+      const nHubs = wpick({ '1': 0.55, '2': 0.30, '3': 0.15 }) | 0;
+      const chosen = [];
+      while (chosen.length < nHubs) {
+        const h = pick(hubs).id;
+        if (chosen.indexOf(h) === -1) chosen.push(h);
+      }
+      const analistas = {};
+      chosen.forEach(h => { analistas[h] = int(2, 14); });
+
+      records.push({
+        id: id++,
+        fecha: fmtD(day),
+        tipo: wpick(tipoW),
+        hubs: chosen,
+        horas: Math.round(expo(1.6, 8) * 10) / 10 + 0.2,
+        analistas,
+        nota: 'Incidente demo registrado automáticamente'
+      });
+    }
+    return { records, hubs, types };
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     6) MiTRACKER  ·  {habits, logs, pendientes}
+     ══════════════════════════════════════════════════════════════════════════ */
+  function trackerJSON() {
+    reseed(SEED + 7);
+    const habits = [
+      { id: 'h1demo', name: 'Leer 20 páginas', emoji: '📚', freq: 'daily', goal: 20, unit: 'páginas' },
+      { id: 'h2demo', name: 'Ejercicio', emoji: '🏃', freq: 'daily', goal: 1, unit: 'sesión' },
+      { id: 'h3demo', name: 'Practicar inglés', emoji: '🗣️', freq: 'daily', goal: 30, unit: 'min' },
+      { id: 'h4demo', name: 'Revisar finanzas', emoji: '💰', freq: 'weekly', goal: 1, unit: 'vez' },
+      { id: 'h5demo', name: 'Meditar', emoji: '🧘', freq: 'daily', goal: 10, unit: 'min' }
+    ];
+    // Adherencia distinta por hábito → las estadísticas cuentan una historia.
+    const adher = { h1demo: 0.78, h2demo: 0.62, h3demo: 0.71, h4demo: 0.85, h5demo: 0.48 };
+
+    const logs = {};
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+    habits.forEach(h => {
+      logs[h.id] = {};
+      for (let i = 0; i < 90; i++) {
+        const d = new Date(today); d.setDate(d.getDate() - i);
+        if (h.freq === 'weekly' && d.getDay() !== 1) continue;
+        // Racha reciente: los últimos días tienen mejor adherencia.
+        const boost = i < 7 ? 0.14 : 0;
+        if (rnd() < adher[h.id] + boost) logs[h.id][fmtD(d)] = 'done';
+      }
+    });
+
+    const pendientes = {};
+    const tareas = [
+      'Revisar dashboard SD', 'Preparar reunión semanal', 'Actualizar documentación',
+      'Validar base de casos', 'Enviar reporte mensual', 'Sesión de calidad',
+      'Responder correos pendientes', 'Planear sprint'
+    ];
+    for (let i = -3; i <= 4; i++) {
+      const d = new Date(today); d.setDate(d.getDate() + i);
+      if (isWeekend(d)) continue;
+      const n = int(1, 4);
+      pendientes[fmtD(d)] = Array.from({ length: n }, (_, k) => ({
+        id: 'p' + i + '_' + k + 'demo',
+        text: pick(tareas),
+        prio: wpick({ 'alta': 0.3, 'media': 0.45, 'baja': 0.25 }),
+        done: i < 0 ? rnd() < 0.8 : rnd() < 0.25
+      }));
+    }
+    return { habits, logs, pendientes };
+  }
+
+  /* ── feedInput: entrega un File a un <input type="file"> real ───────────
+     Muchas herramientas encapsulan su handleFile() dentro de un IIFE, así que
+     no es alcanzable desde fuera. En lugar de tocar internals, alimentamos el
+     input y disparamos 'change': el listener original se encarga del resto.
+     Esto mantiene el demo sobre la MISMA ruta de código que el flujo real. */
+  function feedInput(inputId, file) {
+    const input = document.getElementById(inputId);
+    if (!input) throw new Error('Input no encontrado: ' + inputId);
+
+    let ok = false;
+    if (typeof DataTransfer !== 'undefined') {
+      try {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        ok = input.files && input.files.length === 1;
+      } catch (e) { ok = false; }
+    }
+    if (!ok) {
+      // Fallback (Safari antiguo): FileList no es construible → la redefinimos.
+      const fl = { 0: file, length: 1, item: (i) => (i === 0 ? file : null) };
+      if (typeof Symbol !== 'undefined' && Symbol.iterator) {
+        fl[Symbol.iterator] = function* () { yield file; };
+      }
+      Object.defineProperty(input, 'files', { value: fl, configurable: true });
+    }
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }
+
+  /* ── Banner de datos simulados (inyectado por cada herramienta) ─────────── */
+  function banner(text) {
+    if (document.getElementById('spark-demo-banner')) return;
+    const el = document.createElement('div');
+    el.id = 'spark-demo-banner';
+    el.textContent = text || 'Datos simulados · Demostración de portafolio · Ningún dato real es utilizado';
+    el.style.cssText = [
+      'position:sticky', 'top:0', 'z-index:9999',
+      'background:#C99A3E', 'color:#1B1B1B',
+      'font:600 12px/1.4 system-ui,-apple-system,Segoe UI,sans-serif',
+      'letter-spacing:.02em', 'text-align:center',
+      'padding:7px 14px', 'box-shadow:0 1px 4px rgba(0,0,0,.15)'
+    ].join(';');
+    document.body.insertBefore(el, document.body.firstChild);
+  }
+
+  /* ── API pública ────────────────────────────────────────────────────────── */
+  global.SparkDemo = {
+    reseed,
+    buildCases,
+    autoAsign,
+    casosAOA,
+    calidadAOA,
+    validadorAOA,
+    lndAOA,
+    bitacoraJSON,
+    trackerJSON,
+    xlsxBuffer,
+    xlsxFile,
+    feedInput,
+    banner,
+    _util: { rnd, int, pick, wpick, normal, expo, lognormal, fmtD, fmtDT, bizDaysBack }
+  };
+})(typeof window !== 'undefined' ? window : this);
+
+</script>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚡</div>
+  <div class="hd">
+    <h1>AutoAsign</h1>
+    <p>Motor de asignación inteligente · v2.0</p>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="step-n active" id="sn1">1</div><span class="step-lbl active" id="sl1">Cargar</span></div>
+    <div class="step-line" id="line1"></div>
+    <div class="step"><div class="step-n" id="sn2">2</div><span class="step-lbl" id="sl2">Procesar</span></div>
+    <div class="step-line" id="line2"></div>
+    <div class="step"><div class="step-n" id="sn3">3</div><span class="step-lbl" id="sl3">Resultado</span></div>
+  </div>
+</header>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<main>
+  <!-- ════ PASO 1: CARGAR ════ -->
+  <div id="step1" class="step-panel">
+    <div class="card">
+      <div class="sec-title">01 — Cargar archivo Excel</div>
+      <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-icon">📂</div>
+        <h3>Arrastra tu archivo Excel aquí o haz clic para seleccionar</h3>
+        <p>Formatos aceptados: <strong>.xlsx</strong> — Requiere 4 hojas: Casos - Analista · Pendientes · MSD · Convenciones</p>
+      </div>
+      <input type="file" id="fileInput" accept=".xlsx,.xls">
+      <div class="spark-demo-wrap"><button type="button" class="spark-demo-btn" id="sparkDemoBtn"><span>&#9889;</span><span>Cargar datos demo</span></button><div class="spark-demo-note">Genera un conjunto de datos <b>ficticios</b> con la misma estructura que el archivo real. Ningún dato de Chubb es utilizado.</div></div>
+<div id="fileInfoBox" class="hidden"></div>
+      <div class="grid3">
+        <div class="info-card"><div class="ic">📊</div><h4>Casos - Analista</h4><p>Analistas activos y su carga actual</p></div>
+        <div class="info-card"><div class="ic">📋</div><h4>Pendientes</h4><p>Histórico de casos (detección de duplicados)</p></div>
+        <div class="info-card"><div class="ic">🆕</div><h4>MSD</h4><p>Casos nuevos listos para asignar</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PASO 2: PROCESAR ════ -->
+  <div id="step2" class="hidden">
+    <div class="card" id="summaryCard"></div>
+    <div class="card">
+      <div class="sec-title">02 — Verificar y ejecutar</div>
+      <div id="previewInfo"></div>
+      <div class="row-flex" style="margin-top:16px">
+        <button class="btn-sec" onclick="resetApp()">← Cargar otro archivo</button>
+        <button class="btn" id="runBtn" onclick="runAssignment()">⚡ Ejecutar Asignación Automática</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PASO 3: RESULTADO ════ -->
+  <div id="step3" class="hidden">
+    <div class="stat-grid" id="statsGrid"></div>
+    <div class="grid2">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="sec-title" style="margin-bottom:0">Carga por analista</div>
+          <span class="duration-badge" id="durationBadge"></span>
+        </div>
+        <div id="loadList"></div>
+        <div id="loadSummary"></div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <div class="sec-title" style="margin-bottom:0">Detalle de asignación</div>
+            <button class="copy-btn" onclick="copyTable()">📋 Copiar</button>
+          </div>
+          <div class="tbl-toolbar">
+            <div class="filter-tabs" id="filterTabs">
+              <button class="filter-tab active" data-filter="all" onclick="setFilter('all',this)">Todos <span class="filter-count" id="cntAll"></span></button>
+              <button class="filter-tab" data-filter="assigned" onclick="setFilter('assigned',this)">Asignados <span class="filter-count" id="cntAssigned"></span></button>
+              <button class="filter-tab" data-filter="duplicate" onclick="setFilter('duplicate',this)">Duplicados <span class="filter-count" id="cntDup"></span></button>
+            </div>
+            <div class="search-box">
+              <input type="text" placeholder="Buscar nombre, país, analista…" id="searchInput" oninput="applyFilters()">
+            </div>
+          </div>
+          <div class="tbl-scroll">
+            <table id="resultTable">
+              <thead><tr>
+                <th>Insured Name</th><th>Country</th><th>Lead Product</th>
+                <th>Assignee</th><th>Status</th>
+              </tr></thead>
+              <tbody id="resultBody"></tbody>
+            </table>
+          </div>
+          <div class="tbl-footer">
+            <span id="tblCount"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">03 — Descargar resultado</div>
+      <div class="dl-preview">
+        <h4>📄 El archivo contendrá estas columnas:</h4>
+        <div class="dl-cols" id="dlCols"></div>
+      </div>
+      <p style="font-size:12px;color:var(--soft);margin-bottom:16px">
+        Estructura compatible con la hoja <strong>Pendientes</strong>. Descarga, abre y pega directamente en tu Excel en línea.
+      </p>
+      <div class="row-flex">
+        <button class="btn btn-green" id="dlBtn">⬇ Descargar Excel</button>
+        <button class="btn-sec" onclick="resetApp()">🔄 Nuevo archivo</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// 1. CRC32
+// ═══════════════════════════════════════════════════════════════════════════
+const CRC32_TABLE=(()=>{const t=new Uint32Array(256);for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=c&1?(0xEDB88320^(c>>>1)):(c>>>1);t[i]=c;}return t;})();
+function crc32(data){let c=0xFFFFFFFF;for(let i=0;i<data.length;i++)c=(c>>>8)^CRC32_TABLE[(c^data[i])&0xFF];return(c^0xFFFFFFFF)>>>0;}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 2. ZIP READER
+// ═══════════════════════════════════════════════════════════════════════════
+async function readZipEntries(buffer){
+  const v=new DataView(buffer),u=new Uint8Array(buffer);
+  let eocd=-1;for(let i=buffer.byteLength-22;i>=0;i--){if(v.getUint32(i,true)===0x06054b50){eocd=i;break;}}
+  if(eocd===-1)throw new Error('Archivo ZIP inválido');
+  const cdOffset=v.getUint32(eocd+16,true),nEntries=v.getUint16(eocd+8,true),entries={};
+  let off=cdOffset;
+  for(let i=0;i<nEntries;i++){
+    if(v.getUint32(off,true)!==0x02014b50)break;
+    const method=v.getUint16(off+10,true),cSize=v.getUint32(off+20,true);
+    const fnLen=v.getUint16(off+28,true),exLen=v.getUint16(off+30,true),cmLen=v.getUint16(off+32,true);
+    const lhOff=v.getUint32(off+42,true);
+    const fname=new TextDecoder().decode(u.slice(off+46,off+46+fnLen));
+    const lfnLen=v.getUint16(lhOff+26,true),lexLen=v.getUint16(lhOff+28,true);
+    const dataOff=lhOff+30+lfnLen+lexLen,raw=u.slice(dataOff,dataOff+cSize);
+    if(method===0){entries[fname]=raw;}
+    else if(method===8){
+      const ds=new DecompressionStream('deflate-raw');
+      const w=ds.writable.getWriter(),r=ds.readable.getReader();
+      w.write(raw);w.close();
+      const chunks=[];let total=0;
+      while(true){const{done,value}=await r.read();if(done)break;chunks.push(value);total+=value.length;}
+      const out=new Uint8Array(total);let p=0;for(const c of chunks){out.set(c,p);p+=c.length;}
+      entries[fname]=out;
+    }
+    off+=46+fnLen+exLen+cmLen;
+  }
+  return entries;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 3. XLSX READER
+// ═══════════════════════════════════════════════════════════════════════════
+function parseXml(bytes){return new DOMParser().parseFromString(new TextDecoder().decode(bytes),'text/xml');}
+function colLetterToIdx(s){let n=0;for(const ch of s)n=n*26+(ch.charCodeAt(0)-64);return n-1;}
+function cellRef(ref){const m=ref.match(/([A-Z]+)(\d+)/);if(!m)return null;return{c:colLetterToIdx(m[1]),r:parseInt(m[2])-1};}
+
+async function readXlsx(buffer){
+  const entries=await readZipEntries(buffer);
+  const NS='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+  const wbXml=parseXml(entries['xl/workbook.xml']);
+  const sheetEls=wbXml.getElementsByTagNameNS(NS,'sheet');
+  const sheetById={};
+  for(const el of sheetEls){
+    const name=el.getAttribute('name');
+    const rId=el.getAttribute('r:id')||el.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id');
+    sheetById[rId]=name;
+  }
+  const relsXml=parseXml(entries['xl/_rels/workbook.xml.rels']);
+  const rels={};
+  for(const el of relsXml.getElementsByTagName('Relationship'))rels[el.getAttribute('Id')]=el.getAttribute('Target');
+  const ss=[];
+  if(entries['xl/sharedStrings.xml']){
+    const ssXml=parseXml(entries['xl/sharedStrings.xml']);
+    for(const si of ssXml.getElementsByTagNameNS(NS,'si')){let str='';for(const t of si.getElementsByTagNameNS(NS,'t'))str+=t.textContent||'';ss.push(str);}
+  }
+  const fills=[],xfFills=[];
+  if(entries['xl/styles.xml']){
+    const sXml=parseXml(entries['xl/styles.xml']);
+    for(const f of sXml.getElementsByTagNameNS(NS,'fill')){
+      const pf=f.getElementsByTagNameNS(NS,'patternFill')[0];
+      if(!pf){fills.push(null);continue;}
+      const fg=pf.getElementsByTagNameNS(NS,'fgColor')[0];
+      fills.push(fg?fg.getAttribute('rgb'):null);
+    }
+    const cxfs=sXml.getElementsByTagNameNS(NS,'cellXfs')[0];
+    if(cxfs){for(const xf of cxfs.getElementsByTagNameNS(NS,'xf'))xfFills.push(parseInt(xf.getAttribute('fillId')||'0'));}
+  }
+  const sheets={};
+  for(const[rId,sheetName]of Object.entries(sheetById)){
+    const target=rels[rId];if(!target)continue;
+    const path=target.startsWith('/')?target.slice(1):'xl/'+target;
+    if(!entries[path])continue;
+    const wsXml=parseXml(entries[path]);
+    const grid={};
+    for(const row of wsXml.getElementsByTagNameNS(NS,'row')){
+      for(const cell of row.getElementsByTagNameNS(NS,'c')){
+        const pos=cellRef(cell.getAttribute('r'));if(!pos)continue;
+        const t=cell.getAttribute('t'),si=cell.getAttribute('s');
+        const vEl=cell.getElementsByTagNameNS(NS,'v')[0];
+        let val=vEl?vEl.textContent:null;
+        if(t==='s'&&val!==null)val=ss[parseInt(val)]??val;
+        else if(t==='b')val=val==='1';
+        let rgb=null;
+        if(si!==null){const fi=xfFills[parseInt(si)];if(fi!==undefined)rgb=fills[fi]||null;}
+        grid[`${pos.r},${pos.c}`]={val,rgb};
+      }
+    }
+    let maxR=0,maxC=0;
+    for(const k of Object.keys(grid)){const[r,c]=k.split(',').map(Number);if(r>maxR)maxR=r;if(c>maxC)maxC=c;}
+    const rows=[];
+    for(let r=0;r<=maxR;r++){const row=[];for(let c=0;c<=maxC;c++)row.push(grid[`${r},${c}`]||{val:null,rgb:null});rows.push(row);}
+    sheets[sheetName]={rows};
+  }
+  return sheets;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 4. ZIP WRITER
+// ═══════════════════════════════════════════════════════════════════════════
+function writeZip(files){
+  const enc=new TextEncoder(),localHeaders=[],parts=[];let totalLocal=0;
+  for(const f of files){
+    const nameBytes=enc.encode(f.name),data=f.data instanceof Uint8Array?f.data:enc.encode(f.data),c=crc32(data);
+    const lh=new ArrayBuffer(30+nameBytes.length),lv=new DataView(lh);
+    lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint16(8,0,true);
+    lv.setUint16(12,0,true);lv.setUint32(14,c,true);lv.setUint32(18,data.length,true);
+    lv.setUint32(22,data.length,true);lv.setUint16(26,nameBytes.length,true);lv.setUint16(28,0,true);
+    new Uint8Array(lh,30).set(nameBytes);
+    localHeaders.push({offset:totalLocal,crc:c,size:data.length,nameBytes});
+    parts.push(new Uint8Array(lh));parts.push(data);totalLocal+=30+nameBytes.length+data.length;
+  }
+  const cdParts=[];let cdSize=0;
+  for(let i=0;i<files.length;i++){
+    const{offset,crc:cr,size,nameBytes}=localHeaders[i];
+    const cd=new ArrayBuffer(46+nameBytes.length),cv=new DataView(cd);
+    cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);
+    cv.setUint16(10,0,true);cv.setUint16(14,0,true);cv.setUint32(16,cr,true);
+    cv.setUint32(20,size,true);cv.setUint32(24,size,true);cv.setUint16(28,nameBytes.length,true);
+    cv.setUint32(42,offset,true);new Uint8Array(cd,46).set(nameBytes);
+    cdParts.push(new Uint8Array(cd));cdSize+=46+nameBytes.length;
+  }
+  const eocd=new ArrayBuffer(22),ev=new DataView(eocd);
+  ev.setUint32(0,0x06054b50,true);ev.setUint16(8,files.length,true);ev.setUint16(10,files.length,true);
+  ev.setUint32(12,cdSize,true);ev.setUint32(16,totalLocal,true);
+  const allParts=[...parts,...cdParts,new Uint8Array(eocd)];
+  const total=allParts.reduce((s,p)=>s+p.length,0),out=new Uint8Array(total);let pos=0;
+  for(const p of allParts){out.set(p,pos);pos+=p.length;}return out;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 5. XLSX WRITER
+// ═══════════════════════════════════════════════════════════════════════════
+function writeXlsx(headers,rows){
+  const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const colL=i=>{let s='';i++;while(i>0){s=String.fromCharCode(64+(i%26||26))+s;i=Math.floor((i-(i%26||26))/26);}return s;};
+  let sx=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1">`;
+  headers.forEach((h,i)=>sx+=`<c r="${colL(i)}1" t="inlineStr"><is><t>${esc(h)}</t></is></c>`);sx+=`</row>`;
+  rows.forEach((row,ri)=>{sx+=`<row r="${ri+2}">`;row.forEach((cell,ci)=>sx+=`<c r="${colL(ci)}${ri+2}" t="inlineStr"><is><t>${esc(cell)}</t></is></c>`);sx+=`</row>`;});
+  sx+=`</sheetData></worksheet>`;
+  const te=new TextEncoder();
+  return writeZip([
+    {name:'[Content_Types].xml',data:te.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`)},
+    {name:'_rels/.rels',data:te.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`)},
+    {name:'xl/workbook.xml',data:te.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Asignaciones" sheetId="1" r:id="rId1"/></sheets></workbook>`)},
+    {name:'xl/_rels/workbook.xml.rels',data:te.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`)},
+    {name:'xl/worksheets/sheet1.xml',data:te.encode(sx)},
+  ]);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 6. DATA NORMALIZATION (improved)
+// ═══════════════════════════════════════════════════════════════════════════
+const COUNTRY_MAP={
+  'brasil':'BRASIL','brazil':'BRASIL','br':'BRASIL',
+  'mexico':'MEXICO','méxico':'MEXICO','mx':'MEXICO',
+  'colombia':'COLOMBIA','co':'COLOMBIA',
+  'chile':'CHILE','cl':'CHILE',
+  'ecuador':'ECUADOR','ec':'ECUADOR',
+  'peru':'PERU','perú':'PERU','pe':'PERU',
+  'puerto rico':'PUERTO RICO','pr':'PUERTO RICO','puertorico':'PUERTO RICO',
+  'panama':'PANAMA','panamá':'PANAMA','pa':'PANAMA',
+  'argentina':'ARGENTINA','ar':'ARGENTINA',
+  'uruguay':'URUGUAY','uy':'URUGUAY',
+  'paraguay':'PARAGUAY','py':'PARAGUAY',
+  'bolivia':'BOLIVIA','bo':'BOLIVIA',
+  'venezuela':'VENEZUELA','ve':'VENEZUELA',
+  'costa rica':'COSTA RICA','cr':'COSTA RICA',
+  'republica dominicana':'REPUBLICA DOMINICANA','dominican republic':'REPUBLICA DOMINICANA','rd':'REPUBLICA DOMINICANA',
+  'guatemala':'GUATEMALA','gt':'GUATEMALA',
+  'honduras':'HONDURAS','hn':'HONDURAS',
+  'el salvador':'EL SALVADOR','sv':'EL SALVADOR',
+  'nicaragua':'NICARAGUA','ni':'NICARAGUA',
+};
+function normalizeCountry(s){
+  if(!s)return '';
+  const k=String(s).toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z ]/g,'');
+  return COUNTRY_MAP[k]||String(s).toUpperCase().trim();
+}
+function normalizeLine(s){
+  if(!s)return '';
+  const u=String(s).toUpperCase().trim();
+  if(u.includes('PROPERTY'))return 'PROPERTY';
+  if(u.includes('CASUALTY'))return 'CASUALTY';
+  return u;
+}
+function stripAccents(s){return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function matchHeatmapKey(analystName,heatmap){
+  const up=stripAccents(String(analystName).toUpperCase().trim());
+  for(const key of Object.keys(heatmap)){
+    const kn=stripAccents(key);
+    if(up===kn)return key;
+  }
+  for(const key of Object.keys(heatmap)){
+    const kn=stripAccents(key);
+    if(up.includes(kn)||kn.includes(up))return key;
+    const lastA=up.split(' ').pop(),lastB=kn.split(' ').pop();
+    if(lastA.length>2&&lastA===lastB)return key;
+  }
+  return null;
+}
+function formatDate(s){
+  if(!s)return '';
+  if(typeof s==='number'){const d=new Date((s-25569)*86400000);return d.toISOString().split('T')[0];}
+  if(typeof s==='string'){const d=new Date(s);if(!isNaN(d))return d.toISOString().split('T')[0];return s;}
+  return String(s);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 7. PARSE SHEETS
+// ═══════════════════════════════════════════════════════════════════════════
+function sheetToObjects(sheet){
+  const rows=sheet.rows;if(!rows||rows.length<2)return[];
+  const headers=rows[0].map(c=>String(c.val??'').trim());
+  return rows.slice(1).map(row=>{
+    const obj={};headers.forEach((h,i)=>{if(h)obj[h]=row[i]?row[i].val??null:null;});return obj;
+  }).filter(r=>Object.values(r).some(v=>v!==null&&v!==''));
+}
+
+function classifyFillColor(rgb){
+  if(!rgb||rgb.length<6)return 1;
+  const hex=rgb.slice(-6);
+  const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  if(r>230&&g>230&&b>230)return 1;
+  if(r<30&&g<30&&b<30)return 1;
+  if(r>180&&g<120&&b<120)return -1;
+  if((g>150&&b<100)||(r>200&&g>150&&b<80))return 2;
+  return 1;
+}
+
+function parseHeatmap(convSheet){
+  const rows=convSheet.rows;if(!rows||rows.length<3)return{};
+  const countryByCol={};
+  {let last='';for(let c=1;c<rows[0].length;c++){const v=rows[0][c].val;if(v)last=String(v).trim().toUpperCase();if(last)countryByCol[c]=last;}}
+  const lineByCol={};
+  for(let c=1;c<rows[1].length;c++){const v=rows[1][c].val;if(v)lineByCol[c]=String(v).trim().toUpperCase();}
+  const heatmap={};
+  for(let r=2;r<rows.length;r++){
+    const nameCell=rows[r][0];if(!nameCell||!nameCell.val)continue;
+    const analyst=String(nameCell.val).trim().toUpperCase();heatmap[analyst]={};
+    for(let c=1;c<rows[r].length;c++){
+      const country=countryByCol[c],line=lineByCol[c];if(!country||!line)continue;
+      const rgb=rows[r][c]?rows[r][c].rgb:null;
+      heatmap[analyst][`${country}|${line}`]=classifyFillColor(rgb);
+    }
+  }
+  return heatmap;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 8. ASSIGNMENT ALGORITHM
+// ═══════════════════════════════════════════════════════════════════════════
+function assignCases(msdRows,analystRows,pendingTxnIds,heatmap){
+  const loadMap={},analystNames=[];
+  for(const row of analystRows){
+    const name=String(row['Analista']||'').trim();
+    if(!name||name==='TOTAL')continue;
+    loadMap[name]=parseInt(row['Casos Pendientes']||0)||0;
+    analystNames.push(name);
+  }
+  const results=[];
+  for(const msd of msdRows){
+    const txnId=String(msd['Transaction ID']||'').trim();
+    const isDuplicate=pendingTxnIds.has(txnId);
+    const country=normalizeCountry(msd['Pais']||msd['País']||'');
+    const line=normalizeLine(msd['Lead product']||'');
+    const key=`${country}|${line}`;
+    let assignee='',fitScore=1;
+    if(!isDuplicate){
+      let bestScore=-Infinity,bestName='',bestFit=1;
+      for(const name of analystNames){
+        const hmKey=matchHeatmapKey(name,heatmap);
+        const fit=hmKey?(heatmap[hmKey][key]??1):1;
+        if(fit===-1)continue;
+        const load=loadMap[name]||0;
+        const composite=-load*100+fit*10;
+        if(composite>bestScore){bestScore=composite;bestName=name;bestFit=fit;}
+      }
+      if(bestName){assignee=bestName;fitScore=bestFit;loadMap[bestName]=(loadMap[bestName]||0)+1;}
+    }
+    results.push({
+      'Insured name':msd['Insured name']||'',
+      'Ingestion date':formatDate(msd['Ingestion date']),
+      'Transaction ID':txnId,
+      'Indexing':msd['Indexing']||'',
+      'WorkView ID':msd['Workview ID']||msd['WorkView ID']||'',
+      'Country':country,'Assignee':assignee,'Team':'',
+      'Lead product':line,
+      'Status':isDuplicate?'DUPLICADO - REVISAR':'Pte Analista',
+      'Email subject':msd['Mail Subject']||msd['Email subject']||'',
+      _fitScore:fitScore,_isDuplicate:isDuplicate,
+    });
+  }
+  return{results,finalLoad:loadMap};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 9. TOAST NOTIFICATION SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════
+const TOAST_ICONS={success:'✅',error:'❌',warning:'⚠️',info:'ℹ️'};
+function toast(msg,type='info',duration=4000){
+  const c=document.getElementById('toastContainer');
+  const el=document.createElement('div');
+  el.className=`toast t-${type}`;
+  el.innerHTML=`<span class="toast-icon">${TOAST_ICONS[type]||'ℹ️'}</span><span class="toast-msg">${msg}</span><button class="toast-close" onclick="this.parentElement.classList.add('out');setTimeout(()=>this.parentElement.remove(),300)">✕</button>`;
+  c.appendChild(el);
+  if(duration>0)setTimeout(()=>{if(el.parentElement){el.classList.add('out');setTimeout(()=>el.remove(),300);}},duration);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 10. ANIMATED COUNTER
+// ═══════════════════════════════════════════════════════════════════════════
+function animateNumber(el,target,duration=650){
+  const start=performance.now();
+  const end=typeof target==='number'?target:parseInt(target)||0;
+  (function tick(now){
+    const p=Math.min((now-start)/duration,1);
+    const ease=1-Math.pow(1-p,3);
+    el.textContent=Math.round(end*ease);
+    if(p<1)requestAnimationFrame(tick);
+  })(start);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 11. APP STATE & UI
+// ═══════════════════════════════════════════════════════════════════════════
+let _sheets=null,_result=null,_currentFilter='all';
+
+function setStep(n){
+  [1,2,3].forEach(s=>{
+    const sn=document.getElementById(`sn${s}`),sl=document.getElementById(`sl${s}`);
+    const panel=document.getElementById(`step${s}`);
+    const active=s===n,done=s<n;
+    sn.className='step-n'+(active?' active':done?' done':'');
+    sl.className='step-lbl'+(active?' active':done?' done':'');
+    sn.textContent=done?'✓':s;
+    if(active){panel.classList.remove('hidden');panel.classList.remove('step-panel');void panel.offsetWidth;panel.classList.add('step-panel');}
+    else panel.classList.add('hidden');
+  });
+  document.getElementById('line1').className='step-line'+(n>1?' done':'');
+  document.getElementById('line2').className='step-line'+(n>2?' done':'');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function formatBytes(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
+
+function resetApp(){_sheets=null;_result=null;_currentFilter='all';setStep(1);document.getElementById('fileInput').value='';document.getElementById('fileInfoBox').classList.add('hidden');}
+
+// Drag & drop
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0]);});
+document.getElementById('fileInput').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);});
+
+async function loadFile(file){
+  if(!file.name.match(/\.xlsx$/i)){toast('Solo se aceptan archivos <strong>.xlsx</strong>','error');return;}
+  toast('Leyendo archivo…','info',2000);
+  try{
+    const buf=await file.arrayBuffer();
+    const sheets=await readXlsx(buf);
+    const required=['Casos - Analista','Pendientes','MSD','Convenciones'];
+    const missing=required.filter(s=>!sheets[s]);
+    if(missing.length){toast(`Faltan hojas: <strong>${missing.join(', ')}</strong>. Verifica el archivo.`,'error',6000);return;}
+    _sheets=sheets;
+    // Show file info
+    const fib=document.getElementById('fileInfoBox');
+    fib.classList.remove('hidden');
+    fib.innerHTML=`<div class="file-info"><span class="fi-icon">📗</span><div><div class="fi-name">${file.name}</div><div class="fi-meta">${formatBytes(file.size)} · ${Object.keys(sheets).length} hojas detectadas</div></div><span class="fi-ok">✓ Válido</span></div>`;
+    toast('Archivo cargado correctamente','success');
+    buildStep2(sheets);
+    setStep(2);
+  }catch(e){console.error(e);toast('No se pudo leer el archivo: '+e.message,'error',6000);}
+}
+
+function buildStep2(sheets){
+  const analysts=sheetToObjects(sheets['Casos - Analista']).filter(r=>r['Analista']&&r['Analista']!=='TOTAL');
+  const msd=sheetToObjects(sheets['MSD']);
+  const pending=sheetToObjects(sheets['Pendientes']);
+  const pendingIds=new Set(pending.map(r=>String(r['Transaction ID']||'').trim()));
+  const dupCount=msd.filter(r=>pendingIds.has(String(r['Transaction ID']||'').trim())).length;
+  const currentTotal=analysts.reduce((s,a)=>s+(parseInt(a['Casos Pendientes']||0)||0),0);
+
+  document.getElementById('summaryCard').innerHTML=`<div class="sec-title">Resumen del archivo cargado</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+      ${[['📊',analysts.length,'Analistas activos','accent'],['🆕',msd.length,'Casos en MSD','green'],['📋',pending.length,'Histórico pendientes','soft'],['⚠️',dupCount,'Duplicados detectados','yellow']].map(([ic,val,lbl,col])=>
+        `<div class="info-card" style="padding:12px"><div style="font-size:20px;margin-bottom:4px">${ic}</div><div style="font-size:22px;font-weight:700;font-family:monospace;color:var(--${col})">${val}</div><div style="font-size:11px;color:var(--muted)">${lbl}</div></div>`
+      ).join('')}
+    </div>`;
+
+  document.getElementById('previewInfo').innerHTML=`
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;display:grid;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:18px">🎯</span>
+        <div>
+          <div style="font-size:13px;font-weight:600">${msd.length-dupCount} casos nuevos serán asignados</div>
+          <div style="font-size:11px;color:var(--muted)">${dupCount} duplicados se marcarán como <em>DUPLICADO - REVISAR</em></div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--soft);border-top:1px solid var(--border);padding-top:10px">
+        <strong>Criterios del algoritmo:</strong> ① Balance de carga entre analistas → ② Especialización según mapa de calor (Convenciones) → ③ Bloqueo de combinaciones marcadas en rojo
+      </div>
+      <div style="font-size:11px;color:var(--muted)">Carga actual del equipo: <strong style="color:var(--text)">${currentTotal} casos</strong> pendientes entre ${analysts.length} analistas</div>
+    </div>`;
+}
+
+async function runAssignment(){
+  if(!_sheets){toast('Carga un archivo primero','error');return;}
+  const btn=document.getElementById('runBtn');
+  try{
+    btn.disabled=true;
+    btn.innerHTML='<span class="spinner"></span> Analizando datos…';
+    await new Promise(r=>setTimeout(r,250));
+
+    const t0=performance.now();
+    const analysts=sheetToObjects(_sheets['Casos - Analista']).filter(r=>r['Analista']&&r['Analista']!=='TOTAL');
+    const msd=sheetToObjects(_sheets['MSD']);
+    const pending=sheetToObjects(_sheets['Pendientes']);
+    const heatmap=parseHeatmap(_sheets['Convenciones']);
+    const pendingIds=new Set(pending.map(r=>String(r['Transaction ID']||'').trim()));
+
+    btn.innerHTML='<span class="spinner"></span> Asignando casos…';
+    await new Promise(r=>setTimeout(r,200));
+
+    const{results,finalLoad}=assignCases(msd,analysts,pendingIds,heatmap);
+    const duration=((performance.now()-t0)/1000).toFixed(2);
+
+    btn.innerHTML='<span class="spinner"></span> Generando vista…';
+    await new Promise(r=>setTimeout(r,150));
+
+    _result={results,finalLoad,analysts,duration};
+    buildStep3(results,finalLoad,analysts,duration);
+    setStep(3);
+    toast(`Asignación completada en ${duration}s — ${results.filter(r=>!r._isDuplicate).length} casos asignados`,'success',5000);
+  }catch(e){
+    console.error(e);toast('Error al procesar: '+e.message,'error',6000);
+  }finally{btn.disabled=false;btn.innerHTML='⚡ Ejecutar Asignación Automática';}
+}
+
+function buildStep3(results,finalLoad,analysts,duration){
+  const active=analysts.filter(a=>a['Analista']&&a['Analista']!=='TOTAL');
+  const newCases=results.filter(r=>!r._isDuplicate);
+  const dups=results.filter(r=>r._isDuplicate);
+  const totalPending=Object.values(finalLoad).reduce((s,v)=>s+v,0);
+
+  // ── Stats ──
+  const statsData=[
+    {val:newCases.length,lbl:'Casos asignados',cls:'st-blue',col:'accent'},
+    {val:dups.length,lbl:'Duplicados marcados',cls:'st-yellow',col:'yellow'},
+    {val:totalPending,lbl:'Total casos pendientes',cls:'st-green',col:'green'},
+    {val:active.length,lbl:'Analistas activos',cls:'st-soft',col:'soft'},
+  ];
+  document.getElementById('statsGrid').innerHTML=statsData.map((s,i)=>
+    `<div class="stat ${s.cls}"><div class="stat-val" style="color:var(--${s.col})" data-target="${s.val}" id="sv${i}">0</div><div class="stat-lbl">${s.lbl}</div></div>`
+  ).join('');
+  requestAnimationFrame(()=>statsData.forEach((_,i)=>{const el=document.getElementById(`sv${i}`);animateNumber(el,parseInt(el.dataset.target));}));
+
+  // ── Duration badge ──
+  document.getElementById('durationBadge').textContent=`⏱ ${duration}s`;
+
+  // ── Analyst load ──
+  const loads=active.map(a=>{
+    const name=a['Analista'];
+    const prev=parseInt(a['Casos Pendientes']||0)||0;
+    const total=finalLoad[name]||0;
+    return{name,prev,added:total-prev,total};
+  }).sort((a,b)=>b.total-a.total);
+  const maxLoad=Math.max(...loads.map(l=>l.total),1);
+  const totalPrev=loads.reduce((s,l)=>s+l.prev,0);
+  const totalAdded=loads.reduce((s,l)=>s+l.added,0);
+
+  document.getElementById('loadList').innerHTML=loads.map((l,i)=>{
+    const prevPct=Math.round(l.prev/maxLoad*100);
+    const newPct=Math.round(l.added/maxLoad*100);
+    return`<div class="analyst-item">
+      <span class="analyst-rank">${i+1}</span>
+      <span class="analyst-name">${l.name}</span>
+      <div class="analyst-counts">
+        <span class="cnt-prev">${l.prev}</span>
+        <span class="cnt-new">+${l.added}</span>
+        <span class="cnt-total">${l.total}</span>
+        <div class="load-bar-wrap"><div class="load-seg-prev" style="width:${prevPct}%"></div><div class="load-seg-new" style="width:${newPct}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('loadSummary').innerHTML=`<div class="analyst-summary">
+    <span style="color:var(--muted)">Total equipo</span>
+    <span style="font-family:monospace"><span style="color:var(--muted)">${totalPrev}</span> <span style="color:var(--accent)">+${totalAdded}</span> = <span style="color:var(--green)">${totalPending}</span></span>
+  </div>`;
+
+  // ── Filter counts ──
+  document.getElementById('cntAll').textContent=results.length;
+  document.getElementById('cntAssigned').textContent=newCases.length;
+  document.getElementById('cntDup').textContent=dups.length;
+
+  // ── Result table ──
+  const tbody=document.getElementById('resultBody');
+  tbody.innerHTML=results.map(r=>{
+    const statusBadge=r._isDuplicate?'badge-red':'badge-blue';
+    return`<tr data-dup="${r._isDuplicate}" data-search="${[r['Insured name'],r.Country,r.Assignee,r['Lead product']].join(' ').toLowerCase()}">
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r['Insured name']||'').replace(/"/g,'&quot;')}">${r['Insured name']}</td>
+      <td><span class="badge badge-gray">${r.Country}</span></td>
+      <td>${r['Lead product']}</td>
+      <td style="font-weight:600">${r.Assignee||'<span style="color:var(--muted)">—</span>'}</td>
+      <td><span class="badge ${statusBadge}">${r.Status}</span></td>
+    </tr>`;
+  }).join('');
+  _currentFilter='all';
+  document.getElementById('searchInput').value='';
+  updateTableCount();
+
+  // ── Download preview ──
+  const HEADERS=['Insured name','Ingestion date','Transaction ID','Indexing','WorkView ID','Country','Assignee','Team','Lead product','Status','Email subject'];
+  document.getElementById('dlCols').innerHTML=HEADERS.map(h=>`<span class="dl-col-tag">${h}</span>`).join('');
+  document.getElementById('dlBtn').onclick=()=>downloadResult(results);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 12. TABLE SEARCH & FILTER
+// ═══════════════════════════════════════════════════════════════════════════
+function setFilter(filter,btn){
+  _currentFilter=filter;
+  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+function applyFilters(){
+  const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+  const rows=document.querySelectorAll('#resultBody tr');
+  let visible=0;
+  rows.forEach(tr=>{
+    const isDup=tr.dataset.dup==='true';
+    let showFilter=_currentFilter==='all'||(_currentFilter==='assigned'&&!isDup)||(_currentFilter==='duplicate'&&isDup);
+    let showSearch=!q||tr.dataset.search.includes(q);
+    const show=showFilter&&showSearch;
+    tr.style.display=show?'':'none';
+    if(show)visible++;
+  });
+  updateTableCount(visible);
+}
+function updateTableCount(n){
+  const total=_result?_result.results.length:0;
+  const vis=n!==undefined?n:total;
+  document.getElementById('tblCount').textContent=vis===total?`${total} registros`:`${vis} de ${total} registros`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 13. DOWNLOAD & COPY
+// ═══════════════════════════════════════════════════════════════════════════
+function downloadResult(results){
+  const HEADERS=['Insured name','Ingestion date','Transaction ID','Indexing','WorkView ID','Country','Assignee','Team','Lead product','Status','Email subject'];
+  const rows=results.map(r=>HEADERS.map(h=>r[h]??''));
+  const xlsx=writeXlsx(HEADERS,rows);
+  const blob=new Blob([xlsx],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  const today=new Date().toISOString().split('T')[0];
+  a.download=`Asignaciones_${today}.xlsx`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(`Descargado <strong>Asignaciones_${today}.xlsx</strong>`,'success');
+}
+function copyTable(){
+  if(!_result)return;
+  const hdr=['Insured name','Country','Lead product','Assignee','Status'];
+  const rows=[hdr.join('\t')];
+  for(const r of _result.results)rows.push([r['Insured name'],r.Country,r['Lead product'],r.Assignee,r.Status].join('\t'));
+  navigator.clipboard.writeText(rows.join('\n')).then(()=>toast('Tabla copiada al portapapeles','success'));
+}
+</script>
+
+<script id="spark-demo-wire">
+
+(function(){
+  SparkDemo.banner();
+  var btn = document.getElementById('sparkDemoBtn');
+  if(!btn) return;
+  btn.addEventListener('click', function(){
+    btn.disabled = true;
+    try{
+      /* El parser propio produce {rows:[[{val,rgb}]]}. Inyectamos esa forma
+         directamente en _sheets: la lógica de asignación no cambia. */
+      _sheets = SparkDemo.autoAsign();
+      var fib = document.getElementById('fileInfoBox');
+      var nSheets = Object.keys(_sheets).length;
+      fib.classList.remove('hidden');
+      fib.innerHTML = '<div class="file-info"><span class="fi-icon">&#9889;</span>'+
+        '<div><div class="fi-name">DEMO_Asignacion.xlsx (simulado)</div>'+
+        '<div class="fi-meta">Datos ficticios &middot; '+nSheets+' hojas generadas</div></div>'+
+        '<span class="fi-ok">&#10003; Listo</span></div>';
+      if(typeof toast==='function') toast('Datos demo generados','success');
+      buildStep2(_sheets);
+      setStep(2);
+    }catch(e){
+      console.error(e);
+      if(typeof toast==='function') toast('Error demo: '+e.message,'error');
+    }finally{ btn.disabled = false; }
+  });
+})();
+
+</script>
+</body>
+</html>
