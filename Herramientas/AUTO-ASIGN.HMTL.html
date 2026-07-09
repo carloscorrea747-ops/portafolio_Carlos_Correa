@@ -191,6 +191,642 @@ tr:hover td{background:rgba(61,126,255,.04)}
   .load-bar-wrap{width:60px}
 }
 </style>
+
+<style id="spark-demo-css">
+#spark-demo-banner{position:sticky;top:0;z-index:9999;background:#C99A3E;color:#1B1B1B;
+ font:600 12px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:.02em;
+ text-align:center;padding:7px 14px;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.spark-demo-btn{display:inline-flex;align-items:center;gap:8px;cursor:pointer;
+ background:#1B3A5C;color:#F1EFE8;border:1px solid #1B3A5C;border-radius:8px;
+ padding:11px 18px;font:600 13px/1 system-ui,-apple-system,'Segoe UI',sans-serif;
+ letter-spacing:.01em;transition:all .18s ease;box-shadow:0 1px 3px rgba(27,58,92,.2)}
+.spark-demo-btn:hover{background:#C99A3E;border-color:#C99A3E;color:#1B1B1B;
+ transform:translateY(-1px);box-shadow:0 3px 8px rgba(201,154,62,.3)}
+.spark-demo-btn:active{transform:translateY(0)}
+.spark-demo-btn:disabled{opacity:.55;cursor:progress;transform:none}
+.spark-demo-wrap{display:flex;flex-direction:column;align-items:center;gap:7px;
+ margin:18px 0 4px;text-align:center}
+.spark-demo-note{font:400 11.5px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;
+ color:#7a7466;max-width:440px}
+.spark-demo-note b{color:#1B3A5C;font-weight:600}
+</style>
+
+<script id="spark-demo-engine">
+/* ============================================================================
+   SPARK · Demo Data Engine  ·  spark-demo.js
+   ----------------------------------------------------------------------------
+   Genera datos sintéticos deterministas para las herramientas del portafolio.
+   Todos los datos son FICTICIOS. Ningún dato real de Chubb es utilizado.
+
+   Uso:  cargar este archivo como script, luego:
+           SparkDemo.autoAsign()  ->  { 'MSD': {rows:[[{val,rgb}]]}, ... }
+           SparkDemo.casosAOA()   ->  [[header...],[row...]]
+           ...
+
+   Autor: Carlos Correa
+   ============================================================================ */
+(function (global) {
+  'use strict';
+
+  /* ── PRNG determinista (mulberry32) ─────────────────────────────────────── */
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  const SEED = 20260708;
+  let rand = mulberry32(SEED);
+  function reseed(s) { rand = mulberry32(s == null ? SEED : s); }
+
+  /* ── Primitivas de distribución ─────────────────────────────────────────── */
+  const rnd = () => rand();
+  const int = (lo, hi) => lo + Math.floor(rand() * (hi - lo + 1));
+  const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+
+  function wpick(obj) {
+    const ks = Object.keys(obj);
+    let t = 0; for (const k of ks) t += obj[k];
+    let r = rand() * t;
+    for (const k of ks) { r -= obj[k]; if (r <= 0) return k; }
+    return ks[ks.length - 1];
+  }
+
+  // Box-Muller. Normal truncada a [lo, hi].
+  function normal(mu, sd, lo, hi) {
+    let u = 0, v = 0;
+    while (u === 0) u = rand();
+    while (v === 0) v = rand();
+    let n = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    let x = mu + n * sd;
+    if (lo != null && x < lo) x = lo;
+    if (hi != null && x > hi) x = hi;
+    return x;
+  }
+
+  // Exponencial: cola larga a la derecha. Así se comportan las colas de espera.
+  function expo(mean, cap) {
+    const x = -Math.log(1 - rand()) * mean;
+    return cap != null && x > cap ? cap : x;
+  }
+
+  // Lognormal: Handle Time real es asimétrico, no simétrico.
+  function lognormal(median, sigma, cap) {
+    const x = median * Math.exp(normal(0, sigma, -3, 3));
+    return cap != null && x > cap ? cap : x;
+  }
+
+  /* ── Catálogos (ficticios) ──────────────────────────────────────────────── */
+  const PAISES = ['Colombia', 'México', 'Brasil', 'Chile', 'Argentina', 'Perú', 'Ecuador', 'Panamá', 'Puerto Rico'];
+  const LOBS = ['PROPERTY', 'CASUALTY', 'MARINE', 'FINANCIAL LINES'];
+
+  // Nombres claramente ficticios — nunca colaboradores reales.
+  const ANALISTAS = [
+    'Ana Demo', 'Bruno Ficticio', 'Carla Ejemplo', 'Diego Muestra',
+    'Elena Prueba', 'Fabio Sintético', 'Gabriela Test'
+  ];
+  const UNDERWRITERS = ['UW Demo Uno', 'UW Demo Dos', 'UW Demo Tres', 'UW Demo Cuatro'];
+  const BROKERS = ['Broker Demo A', 'Broker Demo B', 'Broker Demo C', 'Broker Demo D'];
+  const KAMS = ['KAM Demo 1', 'KAM Demo 2', 'KAM Demo 3'];
+
+  const STATUS_W = {
+    'Terminado': 0.72,
+    'No procesado por solicitud del UW': 0.09,
+    'No procesado por duplicidad': 0.05,
+    'No procesado por falta de información': 0.06,
+    'Pte Analista': 0.08
+  };
+
+  // Sesgos intencionales: hacen que los filtros REVELEN algo.
+  // Un país con peor SLA, un analista consistentemente más rápido.
+  const PAIS_BIAS = {
+    'Colombia': 0.92, 'México': 1.00, 'Brasil': 1.28, 'Chile': 0.95,
+    'Argentina': 1.10, 'Perú': 1.05, 'Ecuador': 1.02, 'Panamá': 0.98, 'Puerto Rico': 1.15
+  };
+  const ANALISTA_SPEED = {
+    'Ana Demo': 0.82, 'Bruno Ficticio': 1.05, 'Carla Ejemplo': 0.90,
+    'Diego Muestra': 1.22, 'Elena Prueba': 0.97, 'Fabio Sintético': 1.12, 'Gabriela Test': 1.00
+  };
+  const LOB_WEIGHT = { 'PROPERTY': 1.35, 'CASUALTY': 1.00, 'MARINE': 0.85, 'FINANCIAL LINES': 1.15 };
+
+  /* ── Fechas y días hábiles ──────────────────────────────────────────────── */
+  const pad = (n) => String(n).padStart(2, '0');
+
+  function fmtDT(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+  function fmtD(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  const isWeekend = (d) => d.getDay() === 0 || d.getDay() === 6;
+
+  // Volumen por día de semana: lunes pico, viernes valle. Un patrón operativo real.
+  const DOW_WEIGHT = { 1: 1.35, 2: 1.10, 3: 1.00, 4: 0.95, 5: 0.72 };
+
+  function bizDaysBack(n) {
+    const out = [];
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    while (out.length < n) {
+      if (!isWeekend(d)) out.push(new Date(d));
+      d.setDate(d.getDate() - 1);
+    }
+    return out.reverse();
+  }
+
+  // Hora de llegada dentro de la jornada (8:00–17:30), sesgada a la mañana.
+  function arrivalTime(day) {
+    const d = new Date(day);
+    const minsIntoDay = 480 + Math.floor(Math.abs(normal(0, 1, -3, 3)) * 95);
+    const m = Math.min(minsIntoDay, 1050);
+    d.setHours(Math.floor(m / 60), m % 60, int(0, 59), 0);
+    return d;
+  }
+
+  // Avanza `mins` minutos hábiles saltando noches y fines de semana.
+  function addBizMinutes(start, mins) {
+    const START = 8 * 60, END = 17 * 60 + 30;
+    let d = new Date(start);
+    let left = mins;
+    let guard = 0;
+    while (left > 0 && guard++ < 5000) {
+      if (isWeekend(d)) { d.setDate(d.getDate() + 1); d.setHours(8, 0, 0, 0); continue; }
+      const cur = d.getHours() * 60 + d.getMinutes();
+      if (cur < START) { d.setHours(8, 0, 0, 0); continue; }
+      if (cur >= END) { d.setDate(d.getDate() + 1); d.setHours(8, 0, 0, 0); continue; }
+      const room = END - cur;
+      const step = Math.min(room, left);
+      d = new Date(d.getTime() + step * 60000);
+      left -= step;
+    }
+    return d;
+  }
+
+  /* ── Núcleo: universo de casos ──────────────────────────────────────────── */
+  /* Todo se deriva de aquí. Un solo modelo, muchas vistas. */
+  function buildCases(opts) {
+    opts = opts || {};
+    const nDays = opts.days || 60;
+    const perDay = opts.perDay || 9;
+    const days = bizDaysBack(nDays);
+    const cases = [];
+    let seq = 1;
+
+    for (const day of days) {
+      const w = DOW_WEIGHT[day.getDay()] || 1;
+      const n = Math.max(1, Math.round(normal(perDay * w, perDay * 0.22, 1, perDay * 2.5)));
+
+      for (let i = 0; i < n; i++) {
+        const pais = pick(PAISES);
+        const lob = wpick({ 'PROPERTY': 0.38, 'CASUALTY': 0.31, 'MARINE': 0.14, 'FINANCIAL LINES': 0.17 });
+        const analista = pick(ANALISTAS);
+        const status = wpick(STATUS_W);
+
+        const recibido = arrivalTime(day);
+
+        // Cola: exponencial. Media ~7.3h hábiles — el cuello de botella real.
+        const queueMin = expo(7.3 * 60, 40 * 60) * PAIS_BIAS[pais];
+        const inicio = addBizMinutes(recibido, queueMin);
+
+        // Handle Time: lognormal (mediana ~57 min), modulado por analista y LOB.
+        const htBase = lognormal(57, 0.42, 420);
+        const handleMin = htBase * ANALISTA_SPEED[analista] * LOB_WEIGHT[lob];
+
+        const finGenext = addBizMinutes(inicio, handleMin);
+        const finMail = addBizMinutes(finGenext, normal(14, 6, 2, 60));
+        const sendDot = addBizMinutes(inicio, handleMin * 0.55);
+        const llegadaDot = addBizMinutes(sendDot, normal(9, 4, 1, 40));
+
+        const locations = (lob === 'PROPERTY' || lob === 'CASUALTY')
+          ? (rnd() < 0.05 ? int(101, 480) : int(1, 60))   // 5% supera 100 → excluido de SLA
+          : null;
+
+        const terminal = status === 'Terminado' ||
+          status.indexOf('duplicidad') > -1 ||
+          status.indexOf('falta de') > -1 ||
+          status.indexOf('solicitud del UW') > -1;
+
+        cases.push({
+          seq: seq++,
+          txnId: 'DEMO-TXN-' + String(100000 + seq).slice(1),
+          wvId: 'WV-' + String(200000 + seq).slice(1),
+          insured: 'Asegurado Demo ' + String(seq).padStart(4, '0'),
+          pais, lob, analista, status,
+          underwriter: pick(UNDERWRITERS),
+          recibido, inicio, finGenext, finMail, sendDot, llegadaDot,
+          queueMin, handleMin, locations, terminal,
+          cycleMin: null // se calcula abajo
+        });
+      }
+    }
+
+    // Cycle time hábil aproximado (recibido → finMail), en minutos.
+    for (const c of cases) c.cycleMin = Math.round(c.queueMin + c.handleMin + 14);
+    return cases;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     1) AUTO-ASIGN  ·  parser propio: {rows:[[{val,rgb}]]}
+     No usa SheetJS. Inyectamos la estructura post-parser directamente.
+     ══════════════════════════════════════════════════════════════════════════ */
+  /* Colores elegidos para que classifyFillColor() del tool devuelva el fit correcto.
+     Verificado: FF00B050→2 (especialista), FFF8696B→-1 (bloqueado), null→1 (neutro).
+     Ojo: FF63BE7B (verde Excel de escala) devuelve 1, no 2 — B=123 supera el umbral. */
+  const FILL_GREEN = 'FF00B050';  // especialista  → fit 2
+  const FILL_RED = 'FFF8696B';    // bloqueado     → fit -1
+  const FILL_NONE = null;         // neutro        → fit 1
+
+  function cell(v, rgb) { return { val: v == null ? null : v, rgb: rgb || null }; }
+  function rowOf(vals) { return vals.map(v => cell(v)); }
+
+  function autoAsign() {
+    reseed(SEED + 1);
+    const cases = buildCases({ days: 12, perDay: 7 });
+
+    /* El mapa de calor solo cubre estos 4 países × 2 LOBs. Restringimos los casos
+       al mismo universo para que la especialización sea visible en el resultado. */
+    const paisesHM = ['Brasil', 'México', 'Colombia', 'Chile'];
+    const lobsHM = ['PROPERTY', 'CASUALTY'];
+    cases.forEach(c => { c.pais = pick(paisesHM); c.lob = pick(lobsHM); });
+
+    /* --- Hoja: Casos - Analista --- */
+    const loads = {};
+    ANALISTAS.forEach(a => { loads[a] = int(3, 14); });
+    const casosAnalista = [rowOf(['Analista', 'Casos Pendientes'])];
+    ANALISTAS.forEach(a => casosAnalista.push(rowOf([a, loads[a]])));
+    casosAnalista.push(rowOf(['TOTAL', Object.values(loads).reduce((s, v) => s + v, 0)]));
+
+    /* --- Hoja: Pendientes (histórico → base de duplicados) --- */
+    const pendientes = [rowOf(['Transaction ID', 'Insured name', 'Pais', 'Lead product'])];
+    const histo = cases.slice(0, 40);
+    histo.forEach(c => pendientes.push(rowOf([c.txnId, c.insured, c.pais, c.lob])));
+
+    /* --- Hoja: MSD (casos nuevos; ~12% duplicados intencionales) --- */
+    const msd = [rowOf(['Transaction ID', 'Insured name', 'Ingestion date', 'Indexing',
+      'Workview ID', 'Pais', 'Lead product', 'Mail Subject'])];
+    const nuevos = cases.slice(40);
+    const dups = histo.slice(0, Math.round(nuevos.length * 0.12));
+    const msdRows = nuevos.concat(dups);
+
+    msdRows.forEach(c => {
+      msd.push(rowOf([
+        c.txnId, c.insured, fmtD(c.recibido), 'IDX-' + String(c.seq).padStart(4, '0'),
+        c.wvId, c.pais, c.lob, 'Solicitud demo · ' + c.insured
+      ]));
+    });
+
+    /* --- Hoja: Convenciones (mapa de calor por color de relleno) --- */
+    const hmPaises = paisesHM.map(p => p.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+
+    // Fila 0: país (merge simulado: solo primera col de cada bloque). Fila 1: LOB.
+    const r0 = [cell('')];
+    const r1 = [cell('')];
+    hmPaises.forEach(p => {
+      lobsHM.forEach((l, i) => { r0.push(cell(i === 0 ? p : '')); r1.push(cell(l)); });
+    });
+
+    const nCols = hmPaises.length * lobsHM.length;
+    const grid = ANALISTAS.map(() =>
+      Array.from({ length: nCols }, () => {
+        const roll = rnd();
+        return roll < 0.30 ? FILL_GREEN : (roll < 0.42 ? FILL_RED : FILL_NONE);
+      })
+    );
+
+    /* Guarda: si una columna quedara bloqueada para TODOS los analistas, esos casos
+       serían inasignables y el demo mostraría un resultado roto. Liberamos uno. */
+    for (let c = 0; c < nCols; c++) {
+      if (grid.every(row => row[c] === FILL_RED)) grid[int(0, ANALISTAS.length - 1)][c] = FILL_GREEN;
+    }
+
+    const conv = [r0, r1];
+    ANALISTAS.forEach((a, i) => {
+      conv.push([cell(a.toUpperCase())].concat(grid[i].map(f => cell('', f))));
+    });
+
+    return {
+      'Casos - Analista': { rows: casosAnalista },
+      'Pendientes': { rows: pendientes },
+      'MSD': { rows: msd },
+      'Convenciones': { rows: conv }
+    };
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     2) GENERADOR DE INFORME  ·  AOA (header + filas), sheet_to_json header:1
+     ══════════════════════════════════════════════════════════════════════════ */
+  function casosAOA() {
+    reseed(SEED + 2);
+    const cases = buildCases({ days: 75, perDay: 10 });
+    const header = [
+      'Fecha recibido MSD', 'Pais', 'LOB', 'Status del caso',
+      'Fecha recibido MSD Formato completo',
+      'Fecha y Hora Finalización del caso envio del Mail',
+      'Locations / # Escenarios', 'Fecha y Hora Inicio',
+      'Fecha y Hora Finalización por parte GENEXT/UW'
+    ];
+    const rows = [header];
+    cases.forEach(c => {
+      rows.push([
+        fmtD(c.recibido), c.pais, c.lob, c.status,
+        fmtDT(c.recibido),
+        c.terminal ? fmtDT(c.finMail) : '',
+        c.locations,
+        fmtDT(c.inicio),
+        c.terminal ? fmtDT(c.finGenext) : ''
+      ]);
+    });
+    return rows;
+  }
+
+  function calidadAOA() {
+    reseed(SEED + 3);
+    const rows = [['Pais', 'LOB', 'Año', 'Mes', 'Analista', 'Hallazgo']];
+    const now = new Date();
+    for (let i = 0; i < 95; i++) {
+      const back = int(0, 2);
+      const d = new Date(now.getFullYear(), now.getMonth() - back, 1);
+      rows.push([
+        pick(PAISES), pick(LOBS), d.getFullYear(), d.getMonth() + 1,
+        pick(ANALISTAS), 'Retroalimentación demo #' + (i + 1)
+      ]);
+    }
+    return rows;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     3) VALIDADOR  ·  necesita un ArrayBuffer .xlsx real (worker + XLSX.read)
+        Sembramos errores deliberados para que las reglas R1–R12 disparen.
+     ══════════════════════════════════════════════════════════════════════════ */
+  function validadorAOA() {
+    reseed(SEED + 4);
+    const cases = buildCases({ days: 45, perDay: 9 });
+    const header = [
+      'Transaction ID', 'Insured', 'Analista SD', 'UnderWriter', 'LOB',
+      'Status del caso', '# Locations / # Escenarios',
+      'Fecha recibido MSD Formato completo',
+      'Fecha y Hora Inicio',
+      'Fecha y Hora Finalizacion por parte GENEXT/UW',
+      'Fecha / Hora Send to DotCat',
+      'Fecha / Hora llegada to DotCat',
+      'Fecha y Hora Finalizacion del caso envio del Mail'
+    ];
+    const rows = [header];
+
+    cases.forEach((c, idx) => {
+      let insured = c.insured;
+      let inicio = c.terminal || c.status === 'Pte Analista' ? fmtDT(c.inicio) : '';
+      let finGx = c.terminal ? fmtDT(c.finGenext) : '';
+      let finMail = c.terminal ? fmtDT(c.finMail) : '';
+      let sendDot = fmtDT(c.sendDot);
+      let llegDot = fmtDT(c.llegadaDot);
+      let uw = c.underwriter;
+      let loc = c.locations;
+
+      // ── Errores sembrados (~9% de filas). Rotan por tipo de regla. ──
+      const roll = rnd();
+      if (roll < 0.09) {
+        switch (idx % 6) {
+          case 0: insured = ''; break;                                  // R1
+          case 1: inicio = fmtDT(new Date(c.recibido.getTime() - 36e5)); break; // R2
+          case 2: if (c.status === 'Terminado') finMail = ''; break;    // R3
+          case 3: uw = ''; break;                                       // R8
+          case 4: if (c.lob === 'PROPERTY') loc = ''; break;            // R9
+          case 5: llegDot = fmtDT(new Date(c.sendDot.getTime() - 18e5)); break; // R7
+        }
+      }
+
+      rows.push([
+        c.txnId, insured, c.analista, uw, c.lob, c.status, loc,
+        fmtDT(c.recibido), inicio, finGx, sendDot, llegDot, finMail
+      ]);
+    });
+    return rows;
+  }
+
+  // Construye .xlsx en memoria. Requiere SheetJS ya cargado en la página.
+  function xlsxBuffer(aoa, sheetName) {
+    if (typeof XLSX === 'undefined') throw new Error('SheetJS no disponible');
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Base Casos');
+    return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  }
+
+  function xlsxFile(aoa, sheetName, fileName) {
+    const buf = xlsxBuffer(aoa, sheetName);
+    return new File([buf], fileName || 'DEMO.xlsx',
+      { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     4) LnD GENERATOR  ·  recibe un File; columnas exactas de COLUMNS
+     ══════════════════════════════════════════════════════════════════════════ */
+  const LND_COLS = [
+    'Primary Key', 'Source', 'Country', 'Account', 'GWP',
+    'Effective', 'Expiration', 'Days To Effective', 'Past Due',
+    'Segment', 'Major LOB', 'Minor LOB', 'KAM', 'UDW', 'Broker',
+    'Status', 'Desc. Status', 'Booking Period', 'Large Brokers',
+    'Lost Desc.', 'Expiring Policy', 'NB/Renewal', 'Declinadas', 'Pérdidas'
+  ];
+  const LND_COUNTRIES = ['Argentina', 'Chile', 'Colombia', 'Ecuador', 'Panama', 'Peru', 'Puerto Rico'];
+
+  function lndAOA() {
+    reseed(SEED + 5);
+    const rows = [LND_COLS.slice()];
+    const today = new Date();
+
+    for (let i = 0; i < 260; i++) {
+      const country = pick(LND_COUNTRIES);
+      const eff = new Date(today); eff.setDate(eff.getDate() + int(-70, 130));
+      const exp = new Date(eff); exp.setFullYear(exp.getFullYear() + 1);
+      const dte = Math.round((eff - today) / 864e5);
+
+      rows.push([
+        'PK-' + String(10000 + i), 'DEMO', country,
+        'Cuenta Demo ' + String(i + 1).padStart(3, '0'),
+        Math.round(lognormal(48000, 0.9, 900000)),
+        fmtD(eff), fmtD(exp), dte, dte < 0 ? 'Yes' : 'No',
+        wpick({ 'Corporate': 0.4, 'Middle Market': 0.45, 'Small': 0.15 }),
+        pick(['Property', 'Casualty', 'Marine', 'Financial Lines']),
+        pick(['Fire', 'GL', 'Cargo', 'D&O', 'Auto']),
+        pick(KAMS), pick(UNDERWRITERS), pick(BROKERS),
+        wpick({ 'Quoted': 0.42, 'Bound': 0.26, 'Declined': 0.17, 'Lost': 0.15 }),
+        'Estado demo', fmtD(today).slice(0, 7),
+        rnd() < 0.3 ? 'Yes' : 'No',
+        '', 'POL-DEMO-' + String(5000 + i),
+        rnd() < 0.55 ? 'Renewal' : 'NB',
+        '', ''
+      ]);
+    }
+    return rows;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     5) BITÁCORA DE ERRORES  ·  JSON {records, hubs, types}
+     ══════════════════════════════════════════════════════════════════════════ */
+  function bitacoraJSON() {
+    reseed(SEED + 6);
+    const hubs = [
+      { id: 'MX-SD', label: 'HUB MX · SD', pais: 'México', team: 'SD', cost: 3000, diasMes: 21, horasDia: 7 },
+      { id: 'COL-SD', label: 'HUB COL · SD', pais: 'Colombia', team: 'SD', cost: 1700, diasMes: 21, horasDia: 7 },
+      { id: 'BR-UWX', label: 'HUB BRASIL · UWX', pais: 'Brasil', team: 'UWX', cost: 2850, diasMes: 21, horasDia: 6.5 },
+      { id: 'COL-UWX', label: 'HUB COL · UWX', pais: 'Colombia', team: 'UWX', cost: 2400, diasMes: 21, horasDia: 7 },
+      { id: 'MX-UWX', label: 'HUB MX · UWX', pais: 'México', team: 'UWX', cost: 2700, diasMes: 21, horasDia: 7 }
+    ];
+    const types = [
+      { name: 'ERROR VDI', color: '#185FA5' }, { name: 'ERROR INTERNET', color: '#854F0B' },
+      { name: 'ERROR GENNEXT', color: '#0F6E56' }, { name: 'ERROR GENERAL', color: '#8A2F3B' }
+    ];
+    const tipoW = { 'ERROR VDI': 0.38, 'ERROR INTERNET': 0.24, 'ERROR GENNEXT': 0.23, 'ERROR GENERAL': 0.15 };
+
+    const records = [];
+    const days = bizDaysBack(110);
+    let id = Date.now() - 9e6;
+
+    for (const day of days) {
+      if (rnd() > 0.30) continue;  // ~30% de días hábiles con incidente
+      const nHubs = wpick({ '1': 0.55, '2': 0.30, '3': 0.15 }) | 0;
+      const chosen = [];
+      while (chosen.length < nHubs) {
+        const h = pick(hubs).id;
+        if (chosen.indexOf(h) === -1) chosen.push(h);
+      }
+      const analistas = {};
+      chosen.forEach(h => { analistas[h] = int(2, 14); });
+
+      records.push({
+        id: id++,
+        fecha: fmtD(day),
+        tipo: wpick(tipoW),
+        hubs: chosen,
+        horas: Math.round(expo(1.6, 8) * 10) / 10 + 0.2,
+        analistas,
+        nota: 'Incidente demo registrado automáticamente'
+      });
+    }
+    return { records, hubs, types };
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     6) MiTRACKER  ·  {habits, logs, pendientes}
+     ══════════════════════════════════════════════════════════════════════════ */
+  function trackerJSON() {
+    reseed(SEED + 7);
+    const habits = [
+      { id: 'h1demo', name: 'Leer 20 páginas', emoji: '📚', freq: 'daily', goal: 20, unit: 'páginas' },
+      { id: 'h2demo', name: 'Ejercicio', emoji: '🏃', freq: 'daily', goal: 1, unit: 'sesión' },
+      { id: 'h3demo', name: 'Practicar inglés', emoji: '🗣️', freq: 'daily', goal: 30, unit: 'min' },
+      { id: 'h4demo', name: 'Revisar finanzas', emoji: '💰', freq: 'weekly', goal: 1, unit: 'vez' },
+      { id: 'h5demo', name: 'Meditar', emoji: '🧘', freq: 'daily', goal: 10, unit: 'min' }
+    ];
+    // Adherencia distinta por hábito → las estadísticas cuentan una historia.
+    const adher = { h1demo: 0.78, h2demo: 0.62, h3demo: 0.71, h4demo: 0.85, h5demo: 0.48 };
+
+    const logs = {};
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+    habits.forEach(h => {
+      logs[h.id] = {};
+      for (let i = 0; i < 90; i++) {
+        const d = new Date(today); d.setDate(d.getDate() - i);
+        if (h.freq === 'weekly' && d.getDay() !== 1) continue;
+        // Racha reciente: los últimos días tienen mejor adherencia.
+        const boost = i < 7 ? 0.14 : 0;
+        if (rnd() < adher[h.id] + boost) logs[h.id][fmtD(d)] = 'done';
+      }
+    });
+
+    const pendientes = {};
+    const tareas = [
+      'Revisar dashboard SD', 'Preparar reunión semanal', 'Actualizar documentación',
+      'Validar base de casos', 'Enviar reporte mensual', 'Sesión de calidad',
+      'Responder correos pendientes', 'Planear sprint'
+    ];
+    for (let i = -3; i <= 4; i++) {
+      const d = new Date(today); d.setDate(d.getDate() + i);
+      if (isWeekend(d)) continue;
+      const n = int(1, 4);
+      pendientes[fmtD(d)] = Array.from({ length: n }, (_, k) => ({
+        id: 'p' + i + '_' + k + 'demo',
+        text: pick(tareas),
+        prio: wpick({ 'alta': 0.3, 'media': 0.45, 'baja': 0.25 }),
+        done: i < 0 ? rnd() < 0.8 : rnd() < 0.25
+      }));
+    }
+    return { habits, logs, pendientes };
+  }
+
+  /* ── feedInput: entrega un File a un <input type="file"> real ───────────
+     Muchas herramientas encapsulan su handleFile() dentro de un IIFE, así que
+     no es alcanzable desde fuera. En lugar de tocar internals, alimentamos el
+     input y disparamos 'change': el listener original se encarga del resto.
+     Esto mantiene el demo sobre la MISMA ruta de código que el flujo real. */
+  function feedInput(inputId, file) {
+    const input = document.getElementById(inputId);
+    if (!input) throw new Error('Input no encontrado: ' + inputId);
+
+    let ok = false;
+    if (typeof DataTransfer !== 'undefined') {
+      try {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        ok = input.files && input.files.length === 1;
+      } catch (e) { ok = false; }
+    }
+    if (!ok) {
+      // Fallback (Safari antiguo): FileList no es construible → la redefinimos.
+      const fl = { 0: file, length: 1, item: (i) => (i === 0 ? file : null) };
+      if (typeof Symbol !== 'undefined' && Symbol.iterator) {
+        fl[Symbol.iterator] = function* () { yield file; };
+      }
+      Object.defineProperty(input, 'files', { value: fl, configurable: true });
+    }
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }
+
+  /* ── Banner de datos simulados (inyectado por cada herramienta) ─────────── */
+  function banner(text) {
+    if (document.getElementById('spark-demo-banner')) return;
+    const el = document.createElement('div');
+    el.id = 'spark-demo-banner';
+    el.textContent = text || 'Datos simulados · Demostración de portafolio · Ningún dato real es utilizado';
+    el.style.cssText = [
+      'position:sticky', 'top:0', 'z-index:9999',
+      'background:#C99A3E', 'color:#1B1B1B',
+      'font:600 12px/1.4 system-ui,-apple-system,Segoe UI,sans-serif',
+      'letter-spacing:.02em', 'text-align:center',
+      'padding:7px 14px', 'box-shadow:0 1px 4px rgba(0,0,0,.15)'
+    ].join(';');
+    document.body.insertBefore(el, document.body.firstChild);
+  }
+
+  /* ── API pública ────────────────────────────────────────────────────────── */
+  global.SparkDemo = {
+    reseed,
+    buildCases,
+    autoAsign,
+    casosAOA,
+    calidadAOA,
+    validadorAOA,
+    lndAOA,
+    bitacoraJSON,
+    trackerJSON,
+    xlsxBuffer,
+    xlsxFile,
+    feedInput,
+    banner,
+    _util: { rnd, int, pick, wpick, normal, expo, lognormal, fmtD, fmtDT, bizDaysBack }
+  };
+})(typeof window !== 'undefined' ? window : this);
+
+</script>
 </head>
 <body>
 
@@ -222,7 +858,8 @@ tr:hover td{background:rgba(61,126,255,.04)}
         <p>Formatos aceptados: <strong>.xlsx</strong> — Requiere 4 hojas: Casos - Analista · Pendientes · MSD · Convenciones</p>
       </div>
       <input type="file" id="fileInput" accept=".xlsx,.xls">
-      <div id="fileInfoBox" class="hidden"></div>
+      <div class="spark-demo-wrap"><button type="button" class="spark-demo-btn" id="sparkDemoBtn"><span>&#9889;</span><span>Cargar datos demo</span></button><div class="spark-demo-note">Genera un conjunto de datos <b>ficticios</b> con la misma estructura que el archivo real. Ningún dato de Chubb es utilizado.</div></div>
+<div id="fileInfoBox" class="hidden"></div>
       <div class="grid3">
         <div class="info-card"><div class="ic">📊</div><h4>Casos - Analista</h4><p>Analistas activos y su carga actual</p></div>
         <div class="info-card"><div class="ic">📋</div><h4>Pendientes</h4><p>Histórico de casos (detección de duplicados)</p></div>
@@ -883,6 +1520,37 @@ function copyTable(){
   for(const r of _result.results)rows.push([r['Insured name'],r.Country,r['Lead product'],r.Assignee,r.Status].join('\t'));
   navigator.clipboard.writeText(rows.join('\n')).then(()=>toast('Tabla copiada al portapapeles','success'));
 }
+</script>
+
+<script id="spark-demo-wire">
+
+(function(){
+  SparkDemo.banner();
+  var btn = document.getElementById('sparkDemoBtn');
+  if(!btn) return;
+  btn.addEventListener('click', function(){
+    btn.disabled = true;
+    try{
+      /* El parser propio produce {rows:[[{val,rgb}]]}. Inyectamos esa forma
+         directamente en _sheets: la lógica de asignación no cambia. */
+      _sheets = SparkDemo.autoAsign();
+      var fib = document.getElementById('fileInfoBox');
+      var nSheets = Object.keys(_sheets).length;
+      fib.classList.remove('hidden');
+      fib.innerHTML = '<div class="file-info"><span class="fi-icon">&#9889;</span>'+
+        '<div><div class="fi-name">DEMO_Asignacion.xlsx (simulado)</div>'+
+        '<div class="fi-meta">Datos ficticios &middot; '+nSheets+' hojas generadas</div></div>'+
+        '<span class="fi-ok">&#10003; Listo</span></div>';
+      if(typeof toast==='function') toast('Datos demo generados','success');
+      buildStep2(_sheets);
+      setStep(2);
+    }catch(e){
+      console.error(e);
+      if(typeof toast==='function') toast('Error demo: '+e.message,'error');
+    }finally{ btn.disabled = false; }
+  });
+})();
+
 </script>
 </body>
 </html>
