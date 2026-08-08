@@ -396,6 +396,569 @@ body{font-family:var(--font-base);background:var(--bg-page);color:var(--text-pri
   .flow-gaps-row{flex-wrap:wrap;padding:0;gap:6px}
 }
 </style>
+
+<style id="spark-demo-css">
+#spark-demo-banner{position:sticky;top:0;z-index:99999;background:#C99A3E;color:#1B1B1B;
+ font:600 12px/1.4 'Inter',system-ui,-apple-system,sans-serif;letter-spacing:.02em;
+ text-align:center;padding:7px 14px;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.spark-demo-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin:22px 0 6px}
+#sparkDemoBtn{display:inline-flex;align-items:center;gap:9px;cursor:pointer;
+ padding:12px 30px;border-radius:8px;border:1px solid rgba(201,154,62,.45);
+ background:rgba(201,154,62,.12);color:#C99A3E;font-size:14px;font-weight:500;
+ font-family:var(--font-base,'Inter',system-ui,sans-serif);
+ transition:background .2s,border-color .2s,transform .2s}
+#sparkDemoBtn:hover:not(:disabled){background:rgba(201,154,62,.22);
+ border-color:rgba(201,154,62,.7);transform:translateY(-2px);
+ box-shadow:0 8px 30px rgba(201,154,62,.18)}
+#sparkDemoBtn:disabled{opacity:.5;cursor:progress;transform:none}
+.spark-demo-note{font:400 11px/1.5 var(--font-base,'Inter',system-ui,sans-serif);
+ color:rgba(255,255,255,.42);max-width:460px;text-align:center}
+.spark-demo-note b{color:rgba(255,255,255,.68);font-weight:500}
+</style>
+
+<script id="spark-demo-engine">
+/* ============================================================================
+   SPARK · Demo Data Engine — SD INTELLIGENCE  ·  spark-demo-sd.js
+   ----------------------------------------------------------------------------
+   Genera ~80.000 casos ficticios (2 años) con la MISMA forma que el Excel real,
+   los empaqueta como .xlsx en memoria y los entrega a los <input type=file>
+   del dashboard. El parser, el Worker y la caché corren tal cual.
+
+   Todos los datos son FICTICIOS. Ningún dato real de Chubb es utilizado.
+
+   CONTRATO VERIFICADO contra DASHBOARD_V2.HTML:
+     · Hoja CASOS   -> debe llamarse "Base Casos"  (normalizada: 'basecasos')
+     · Hoja TEAM    -> debe llamarse "Team", cols "NOMBRE BD" + "TEAM"
+                       Sin ella, resolveTeamCountry() devuelve null para todos
+                       y adjustDF() asume Colombia -> aviso de "unmapped".
+     · Hoja CALIDAD -> nombre debe contener "data"
+     · Fechas       -> SERIAL de Excel (número). pDT() lo convierte con
+                       epoch Date.UTC(1899,11,30). Un string también sirve,
+                       pero el serial es lo que produce Excel de verdad.
+     · adjustDF()   -> DATE_FULL viene en hora Miami (ET) y se corrige a hora
+                       local del analista según su TEAM. Lo emitimos en ET.
+
+   Autor: Carlos Correa
+   ============================================================================ */
+(function (global) {
+  'use strict';
+
+  /* ── PRNG determinista ──────────────────────────────────────────────────── */
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const SEED = 20260708;
+  let rand = mulberry32(SEED);
+  const reseed = (s) => { rand = mulberry32(s == null ? SEED : s); };
+
+  const rnd = () => rand();
+  const int = (lo, hi) => lo + Math.floor(rand() * (hi - lo + 1));
+  const pick = (a) => a[Math.floor(rand() * a.length)];
+  function wpick(o) {
+    const ks = Object.keys(o);
+    let t = 0; for (const k of ks) t += o[k];
+    let r = rand() * t;
+    for (const k of ks) { r -= o[k]; if (r <= 0) return k; }
+    return ks[ks.length - 1];
+  }
+  function normal(mu, sd, lo, hi) {
+    let u = 0, v = 0;
+    while (u === 0) u = rand();
+    while (v === 0) v = rand();
+    const n = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    let x = mu + n * sd;
+    if (lo != null && x < lo) x = lo;
+    if (hi != null && x > hi) x = hi;
+    return x;
+  }
+  const expo = (mean, cap) => {
+    const x = -Math.log(1 - rand()) * mean;
+    return cap != null && x > cap ? cap : x;
+  };
+  const lognormal = (med, sig, cap) => {
+    const x = med * Math.exp(normal(0, sig, -3, 3));
+    return cap != null && x > cap ? cap : x;
+  };
+
+  /* ── Serial de Excel ────────────────────────────────────────────────────── */
+  /* pDT(number) => new Date(Date.UTC(1899,11,30) + v*864e5)
+     Así que serial = (msUTC - EXCEL_EPOCH) / 864e5. Trabajamos todo en UTC:
+     el dashboard interpreta el Excel como naive-UTC ("8:00" del Excel = 8:00 UTC). */
+  const EXCEL_EPOCH = Date.UTC(1899, 11, 30);
+  const toSerial = (ms) => (ms - EXCEL_EPOCH) / 864e5;
+  const fromSerial = (s) => new Date(EXCEL_EPOCH + s * 864e5);
+
+  /* ── Catálogos ficticios ────────────────────────────────────────────────── */
+  /* COUNTRY_NORM del dashboard sólo reconoce estos 9. Cualquier otro pasa crudo. */
+  const PAISES = ['Colombia', 'México', 'Brasil', 'Chile', 'Argentina',
+    'Perú', 'Ecuador', 'Panamá', 'Puerto Rico'];
+
+  /* CONFIG.COLORS.LOB sólo define PROPERTY/CASUALTY/MARINE; otros toman color
+     de la paleta. THRESHOLDS.HANDLE_TIME sólo tiene CASUALTY y PROPERTY. */
+  const LOBS = ['PROPERTY', 'CASUALTY', 'MARINE', 'FINANCIAL LINES'];
+
+  /* Nombres evidentemente ficticios. resolveTeamCountry() sólo entiende
+     'colombia' y 'mexico' -> el TEAM de cada analista debe contener uno de esos. */
+  const ANALISTAS = [
+    { name: 'Ana Demo', team: 'Colombia', speed: 0.62 },
+    { name: 'Bruno Ficticio', team: 'México', speed: 1.10 },
+    { name: 'Carla Ejemplo', team: 'Colombia', speed: 0.78 },
+    { name: 'Diego Muestra', team: 'México', speed: 1.55 },
+    { name: 'Elena Prueba', team: 'Colombia', speed: 0.95 },
+    { name: 'Fabio Sintético', team: 'México', speed: 1.32 },
+    { name: 'Gabriela Test', team: 'Colombia', speed: 1.00 },
+    { name: 'Hugo Modelo', team: 'México', speed: 0.70 },
+    { name: 'Irene Sandbox', team: 'Colombia', speed: 0.88 },
+    { name: 'Julio Placeholder', team: 'México', speed: 1.18 }
+  ];
+
+  /* STATUS_HOMOLOGATION mapea estos strings crudos a los 4 canónicos.
+     Emitimos los CRUDOS para ejercitar la homologación real del Worker. */
+  const STATUS_RAW = {
+    'Terminado': 0.70,
+    'No procesado por solicitud del UW': 0.08,      // -> Declinado
+    'No procesado por duplicidad': 0.05,            // -> Rechazado
+    'No procesado por falta de información': 0.05,  // -> Rechazado
+    'No procesado por fuera de scope': 0.02,        // -> Rechazado
+    'Pte Analista': 0.06,                           // -> Pte Analista
+    'Pte Rta UW': 0.02,                             // -> Pte Analista
+    'Asignado': 0.02                                // -> Asignado
+  };
+  // Estados que NO tienen fechas de fin (caso abierto).
+  const OPEN_STATUS = new Set(['Pte Analista', 'Pte Rta UW', 'Asignado']);
+
+  const PIPELINES = ['CRM', 'Pipeline', 'N/A', ''];
+
+  /* Criterios de calidad. C3/C4 se excluyen del SLA global (regla de negocio). */
+  const CRITERIOS = { 'C1': 0.30, 'C2': 0.26, 'C3': 0.18, 'C4': 0.14, 'C5': 0.12 };
+  const CATEGORIAS = ['Datos', 'Proceso', 'Documentación', 'Sistema'];
+  const TIPOS_SOL = ['Cotización', 'Renovación', 'Endoso', 'Consulta'];
+
+  /* Sesgos intencionales: los filtros deben REVELAR algo.
+     Medido con el Worker real: con el sesgo suave (0.92-1.28) el spread de SLA
+     por país quedaba en 11 pts, casi inerte frente a analista (16) y LOB (15).
+     Ampliado a 0.80-1.75 -> ~24 pts. Brasil peor, Colombia/México mejores. */
+  const PAIS_BIAS = {
+    'Colombia': 0.72, 'México': 0.80, 'Brasil': 1.75, 'Chile': 0.90,
+    'Argentina': 1.25, 'Perú': 1.15, 'Ecuador': 1.05, 'Panamá': 0.95,
+    'Puerto Rico': 1.45
+  };
+  /* Calibrado contra THRESHOLDS.HANDLE_TIME: CASUALTY [60,90], PROPERTY [120,180].
+     Con pesos bajos el heatmap salía todo verde y el semáforo no demostraba nada. */
+  const LOB_WEIGHT = {
+    'PROPERTY': 2.60, 'CASUALTY': 1.35, 'MARINE': 0.85, 'FINANCIAL LINES': 1.15
+  };
+
+  /* ── Jornada laboral (espejo de CONFIG.WORKDAY) ─────────────────────────── */
+  const WORKDAY = {
+    START_MIN: 480, END_MIN: 1110,          // 8:00 - 18:30 (default)
+    BY_COUNTRY: {
+      colombia: { START_MIN: 480, END_MIN: 1020 },   // 8:00 - 17:00
+      mexico: { START_MIN: 510, END_MIN: 1050 }    // 8:30 - 17:30
+    }
+  };
+  function teamWindow(team) {
+    const co = String(team || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (co.indexOf('colomb') >= 0) return WORKDAY.BY_COUNTRY.colombia;
+    if (co.indexOf('mex') >= 0) return WORKDAY.BY_COUNTRY.mexico;
+    return { START_MIN: WORKDAY.START_MIN, END_MIN: WORKDAY.END_MIN };
+  }
+
+  const isWeekendUTC = (d) => d.getUTCDay() === 0 || d.getUTCDay() === 6;
+
+  /* Avanza `mins` minutos DENTRO de la ventana [S,E], saltando noches y fines
+     de semana. Trabaja en UTC para alinearse con bizMin() del Worker. */
+  function addBizMinUTC(start, mins, win) {
+    const S = win.START_MIN, E = win.END_MIN;
+    /* Minutos enteros: fracciones producen timestamps con segundos que caen
+       exactamente en el borde END_MIN y se leen como "fuera de jornada". */
+    let d = new Date(start.getTime()), left = Math.max(1, Math.round(mins)), guard = 0;
+    while (left > 0 && guard++ < 20000) {
+      if (isWeekendUTC(d)) {
+        d.setUTCDate(d.getUTCDate() + 1);
+        d.setUTCHours(0, S, 0, 0);
+        continue;
+      }
+      const cur = d.getUTCHours() * 60 + d.getUTCMinutes();
+      if (cur < S) { d.setUTCHours(0, S, 0, 0); continue; }
+      if (cur >= E) {
+        d.setUTCDate(d.getUTCDate() + 1);
+        d.setUTCHours(0, S, 0, 0);
+        continue;
+      }
+      const step = Math.min(E - cur, left);
+      d = new Date(d.getTime() + step * 60000);
+      left -= step;
+    }
+    return d;
+  }
+
+  /* ── DST de Miami (espejo de isMiamiDST del Worker) ─────────────────────── */
+  function isMiamiDST(d) {
+    const yr = d.getUTCFullYear(), mo = d.getUTCMonth();
+    if (mo > 2 && mo < 10) return true;
+    if (mo > 10 || mo < 2) return false;
+    if (mo === 2) {
+      const mar1 = new Date(Date.UTC(yr, 2, 1)).getUTCDay();
+      const secSun = 1 + ((7 - mar1) % 7) + 7;
+      return d.getTime() >= Date.UTC(yr, 2, secSun, 2, 0);
+    }
+    const nov1 = new Date(Date.UTC(yr, 10, 1)).getUTCDay();
+    const fstSun = 1 + ((7 - nov1) % 7);
+    return d.getTime() < Date.UTC(yr, 10, fstSun, 2, 0);
+  }
+
+  /* adjustDF() del Worker RESTA este offset para pasar de Miami a hora local.
+     Nosotros generamos la hora local y SUMAMOS el mismo offset para emitir
+     el valor "en hora Miami" que el Excel real contiene. Así, tras adjustDF,
+     el dashboard recupera exactamente la hora local que diseñamos. */
+  function localToMiamiOffsetMin(dLocal, team) {
+    const co = String(team || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const dst = isMiamiDST(dLocal);
+    if (co.indexOf('colomb') >= 0) return dst ? 60 : 0;      // adjustDF resta 60/0
+    if (co.indexOf('mex') >= 0) return dst ? 120 : 60;       // adjustDF resta 120/60
+    return 0;
+  }
+
+  /* ── Volumen ────────────────────────────────────────────────────────────── */
+  const DOW_W = { 1: 1.35, 2: 1.10, 3: 1.00, 4: 0.95, 5: 0.72 };
+
+  /* Días hábiles hacia atrás, terminando AYER (nunca hoy ni el futuro).
+     Un caso "Terminado" con fecha de cierre futura es incoherente y salta a la vista. */
+  function bizDaysBackUTC(n) {
+    const out = [];
+    const d = new Date();
+    d.setUTCHours(0, 0, 0, 0);
+    d.setUTCDate(d.getUTCDate() - 1);       // arranca en ayer
+    while (out.length < n) {
+      if (!isWeekendUTC(d)) out.push(new Date(d.getTime()));
+      d.setUTCDate(d.getUTCDate() - 1);
+    }
+    return out.reverse();
+  }
+
+  /* Hora de llegada dentro de la jornada, sesgada a la mañana.
+     Segundos en 0: addBizMinUTC avanza minutos enteros, y un timestamp con
+     segundos hace que un caso pueda quedar exactamente en END_MIN:SS, es decir
+     leído como "fuera de jornada" aunque le queden 0 minutos de trabajo. */
+  function arrivalUTC(day, win) {
+    const d = new Date(day.getTime());
+    const span = win.END_MIN - win.START_MIN - 60;
+    const m = win.START_MIN + Math.min(Math.floor(Math.abs(normal(0, 1, -3, 3)) * span * 0.42), span);
+    d.setUTCHours(0, m, 0, 0);
+    return d;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     GENERADOR DE CASOS
+     ══════════════════════════════════════════════════════════════════════════ */
+  function buildCases(opts) {
+    opts = opts || {};
+    const nDays = opts.days || 504;        // ~2 años hábiles
+    const target = opts.total || 80000;    // total aproximado de filas
+    const days = bizDaysBackUTC(nDays);
+    const NOW = opts.now ? new Date(opts.now).getTime() : Date.now();
+
+    // Peso total para repartir `target` respetando el patrón semanal.
+    let wsum = 0;
+    for (const d of days) wsum += (DOW_W[d.getUTCDay()] || 1);
+    const perWeight = target / wsum;
+
+    const cases = [];
+    let seq = 0;
+
+    for (const day of days) {
+      const w = DOW_W[day.getUTCDay()] || 1;
+      const base = perWeight * w;
+      const n = Math.max(1, Math.round(normal(base, base * 0.18, 1, base * 2.2)));
+
+      for (let i = 0; i < n; i++) {
+        seq++;
+        const analista = pick(ANALISTAS);
+        const win = teamWindow(analista.team);
+        const pais = pick(PAISES);
+        const lob = wpick({ 'PROPERTY': 0.38, 'CASUALTY': 0.31, 'MARINE': 0.14, 'FINANCIAL LINES': 0.17 });
+        const stRaw0 = wpick(STATUS_RAW);
+        let stRaw = stRaw0;
+
+        /* dfLocal = "Fecha recibido MSD formato completo" en hora local del analista.
+           Es el ancla de Cycle Time y Lead Time. */
+        const dfLocal = arrivalUTC(day, win);
+
+        /* Cola: exponencial (media 7.3h hábiles), modulada por país. */
+        const queueMin = expo(7.3 * 60, 40 * 60) * PAIS_BIAS[pais];
+        const inicio = addBizMinUTC(dfLocal, queueMin, win);
+
+        /* Handle Time: lognormal. pHT() usa "Same Day Smart": mismo día -> minutos
+           calendario. Generamos HT dentro de la jornada para que el mismo-día domine. */
+        const htRaw = lognormal(57, 0.42, 1440) * analista.speed * LOB_WEIGHT[lob];
+        const handleMin = Math.min(htRaw, 1440);
+        const finUW = addBizMinUTC(inicio, handleMin, win);
+
+        /* Fases posteriores. pModel = finUW -> llegadaDC ; p5 = llegadaDC -> finMail */
+        const sendDC = addBizMinUTC(finUW, normal(8, 4, 1, 40), win);
+        const llegadaDC = addBizMinUTC(sendDC, normal(6, 3, 1, 30), win);
+        const finMail = addBizMinUTC(llegadaDC, normal(11, 5, 2, 45), win);
+
+        /* Coherencia temporal: un caso cuyo cierre caería en el futuro no puede estar
+           "Terminado". Lo dejamos abierto — que es exactamente lo que ocurre en la
+           realidad con los casos de los últimos días. */
+        let open = OPEN_STATUS.has(stRaw);
+        if (!open && finMail.getTime() > NOW) {
+          stRaw = (inicio.getTime() > NOW) ? 'Asignado' : 'Pte Analista';
+          open = true;
+        }
+        /* "Asignado" = aún no empezó. Si INICIO cayó en el futuro, no lo emitimos:
+           una fecha de inicio futura en el Excel sería un dato roto. */
+        const noStart = (stRaw === 'Asignado') || (inicio.getTime() > NOW);
+
+        /* QLOC: ~5% supera 100 (criterio C4). */
+        const qloc = (lob === 'PROPERTY' || lob === 'CASUALTY')
+          ? (rnd() < 0.05 ? int(101, 480) : int(1, 100))
+          : int(1, 30);
+
+        cases.push({
+          seq, analista, pais, lob, stRaw, open, noStart,
+          dfLocal, inicio, finUW, sendDC, llegadaDC, finMail,
+          qloc, queueMin, handleMin
+        });
+      }
+    }
+    return cases;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     AOA: hoja "Base Casos"
+     Orden de columnas = fallbackIndex de CONFIG.CASOS_COLUMNS (0..18).
+     Aunque los alias resuelven por nombre, respetar el orden evita que un
+     fallback por índice mapee la columna equivocada EN SILENCIO.
+     ══════════════════════════════════════════════════════════════════════════ */
+  const CASOS_HEADER = [
+    'Fecha recibido MSD',                                   // 0  DATE
+    'Analista SD',                                          // 1  ANALYST
+    'Pais',                                                 // 2  CO
+    'LOB',                                                  // 3  LOB
+    'Transaction ID',                                       // 4  TRANS
+    'Pipeline / CRM',                                       // 5  PIPELINE
+    'WV Quote',                                             // 6  WV_QUOTE
+    'GenNext ID (Policy ID)',                               // 7  GENNEXT_ID
+    'UW Portal ID',                                         // 8  UW_PORTAL
+    'GenNext RN',                                           // 9  GENNEXT_RN
+    'Locations / # Escenarios',                             // 10 QLOC
+    'Fecha y Hora Inicio',                                  // 11 INICIO
+    'Fecha y Hora Finalización por parte GENEXT/UW',        // 12 FIN_UW
+    'Fecha / Hora Send to DotCat',                          // 13 SEND_DC
+    'Fecha / Hora llegada to DotCat',                       // 14 LLEGADA_DC
+    'Fecha y Hora Finalización del caso envio del Mail',    // 15 FIN_MAIL
+    'Status del caso',                                      // 16 ST
+    'Observación en detalle',                               // 17 COMMENT
+    'Fecha recibido MSD formato completo',                  // 18 DATE_FULL
+    'Risk ID (MCore)'                                       // 19 RISK_ID (sin fallback)
+  ];
+
+  function casosAOA(cases) {
+    const rows = [CASOS_HEADER.slice()];
+    for (const c of cases) {
+      const id = String(c.seq).padStart(6, '0');
+
+      /* DATE: solo fecha (serial entero, medianoche UTC). */
+      const dOnly = Date.UTC(c.dfLocal.getUTCFullYear(), c.dfLocal.getUTCMonth(), c.dfLocal.getUTCDate());
+
+      /* DATE_FULL: el Excel real lo trae en hora Miami. adjustDF() lo convierte a
+         hora local del analista. Sumamos el offset para que la conversión lo devuelva
+         exactamente a dfLocal. */
+      const offMin = localToMiamiOffsetMin(c.dfLocal, c.analista.team);
+      const dfMiami = new Date(c.dfLocal.getTime() + offMin * 60000);
+
+      rows.push([
+        toSerial(dOnly),                                    // 0
+        c.analista.name,                                    // 1
+        c.pais,                                             // 2
+        c.lob,                                              // 3
+        'DEMO-TXN-' + id,                                   // 4
+        pick(PIPELINES),                                    // 5
+        'WV-' + id,                                         // 6
+        'GN-' + id,                                         // 7
+        'UWP-' + id,                                        // 8
+        'RN-' + id,                                         // 9
+        c.qloc,                                             // 10
+        c.noStart ? null : toSerial(c.inicio.getTime()),    // 11
+        c.open ? null : toSerial(c.finUW.getTime()),        // 12
+        c.open ? null : toSerial(c.sendDC.getTime()),       // 13
+        c.open ? null : toSerial(c.llegadaDC.getTime()),    // 14
+        c.open ? null : toSerial(c.finMail.getTime()),      // 15
+        c.stRaw,                                            // 16
+        'Registro demo ' + id,                              // 17
+        toSerial(dfMiami.getTime()),                        // 18
+        'MC-' + id                                          // 19
+      ]);
+    }
+    return rows;
+  }
+
+  /* Hoja "Team": NOMBRE BD + TEAM. Sin ella, todos los analistas salen
+     "sin team mapeado" y adjustDF() asume Colombia. */
+  function teamAOA() {
+    const rows = [['NOMBRE BD', 'TEAM']];
+    for (const a of ANALISTAS) rows.push([a.name, a.team]);
+    return rows;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     AOA: hoja "Data" (CALIDAD)
+     Orden = fallbackIndex de CONFIG.CALIDAD_COLUMNS.
+     Ojo: START=0 pero ANALYST=5. Hay un hueco de columnas 1..4 en el archivo real.
+     ══════════════════════════════════════════════════════════════════════════ */
+  const CALIDAD_HEADER = [
+    'Hora de inicio',                 // 0  START
+    'Hora de finalización',           // 1  (relleno)
+    'Correo electrónico',             // 2  (relleno)
+    'Nombre',                         // 3  (relleno)
+    'Última modificación',            // 4  (relleno)
+    'Analista',                       // 5  ANALYST
+    'País',                           // 6  COUNTRY
+    'LOB',                            // 7  LOB
+    'Año',                            // 8  YEAR
+    'Mes',                            // 9  MONTH
+    'Semana',                         // 10 WEEK
+    'Categoria',                      // 11 CATEGORY
+    '¿Qué tipo de solicitud tienes?', // 12 REQUEST_TYPE
+    'Criterio Agrupado'               // 13 GROUPED_CRITERIA
+  ];
+
+  /* mkMK() del Worker exige nombre de mes en español minúscula. El slicer de mes
+     de CALIDAD usa el número, pero mantenemos coherencia con MONTHS.FULL. */
+  const MESES = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  function isoWeek(d) {
+    const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+    const day = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - day);
+    const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil(((t - y0) / 86400000 + 1) / 7);
+  }
+
+  function calidadAOA(cases, rate) {
+    rate = rate == null ? 0.07 : rate;
+    const rows = [CALIDAD_HEADER.slice()];
+    for (const c of cases) {
+      if (rnd() > rate) continue;
+      const d = c.dfLocal;
+      rows.push([
+        toSerial(d.getTime()),                    // 0  Hora de inicio (serial)
+        toSerial(d.getTime() + 6e5),              // 1
+        'demo' + c.seq + '@example.invalid',      // 2
+        c.analista.name,                          // 3
+        toSerial(d.getTime() + 6e5),              // 4
+        c.analista.name,                          // 5
+        c.pais,                                   // 6
+        c.lob,                                    // 7
+        d.getUTCFullYear(),                       // 8
+        d.getUTCMonth() + 1,                      // 9
+        isoWeek(d),                               // 10
+        pick(CATEGORIAS),                         // 11
+        pick(TIPOS_SOL),                          // 12
+        wpick(CRITERIOS)                          // 13
+      ]);
+    }
+    return rows;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     Empaquetado .xlsx y entrega al dashboard
+     ══════════════════════════════════════════════════════════════════════════ */
+  function buildCasosFile(cases) {
+    if (typeof XLSX === 'undefined') throw new Error('SheetJS no disponible');
+    const wb = XLSX.utils.book_new();
+    // El nombre "Base Casos" es obligatorio: handleCasosFile lo busca por nombre.
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(casosAOA(cases)), 'Base Casos');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(teamAOA()), 'Team');
+    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array', compression: true });
+    return new File([buf], 'DEMO_Consolidado.xlsx',
+      { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+
+  function buildCalidadFile(cases) {
+    if (typeof XLSX === 'undefined') throw new Error('SheetJS no disponible');
+    const wb = XLSX.utils.book_new();
+    // El nombre debe contener "data".
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(calidadAOA(cases)), 'Data');
+    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array', compression: true });
+    return new File([buf], 'DEMO_Feedbacks.xlsx',
+      { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+
+  /* feedInput: los handlers viven dentro de startApp() y no son alcanzables.
+     Alimentamos el <input type=file> real y disparamos 'change'. Así el demo
+     recorre la MISMA ruta de código que el flujo con Excel: parser, Worker, caché. */
+  function feedInput(inputId, file) {
+    const input = document.getElementById(inputId);
+    if (!input) throw new Error('Input no encontrado: ' + inputId);
+    let ok = false;
+    if (typeof DataTransfer !== 'undefined') {
+      try {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        ok = input.files && input.files.length === 1;
+      } catch (e) { ok = false; }
+    }
+    if (!ok) {
+      const fl = { 0: file, length: 1, item: (i) => (i === 0 ? file : null) };
+      if (typeof Symbol !== 'undefined' && Symbol.iterator) {
+        fl[Symbol.iterator] = function* () { yield file; };
+      }
+      Object.defineProperty(input, 'files', { value: fl, configurable: true });
+    }
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }
+
+  /* La caché de IndexedDB persiste los datos procesados. Si no se purga, los
+     datos demo sobreviven a la recarga y pueden mezclarse con los reales. */
+  function purgeCache(dbName) {
+    return new Promise((resolve) => {
+      if (!global.indexedDB) return resolve(false);
+      let done = false;
+      const fin = (v) => { if (!done) { done = true; resolve(v); } };
+      const req = indexedDB.deleteDatabase(dbName || 'dashboard-merged-v1');
+      req.onsuccess = () => fin(true);
+      req.onerror = () => fin(false);
+      req.onblocked = () => fin(false);
+      setTimeout(() => fin(false), 2500);
+    });
+  }
+
+  function banner(text) {
+    if (document.getElementById('spark-demo-banner')) return;
+    const el = document.createElement('div');
+    el.id = 'spark-demo-banner';
+    el.textContent = text || 'Datos simulados · Demostración de portafolio · Ningún dato real de Chubb es utilizado';
+    el.style.cssText = 'position:sticky;top:0;z-index:99999;background:#C99A3E;color:#1B1B1B;' +
+      "font:600 12px/1.4 'Inter',system-ui,-apple-system,sans-serif;letter-spacing:.02em;" +
+      'text-align:center;padding:7px 14px;box-shadow:0 1px 4px rgba(0,0,0,.15)';
+    document.body.insertBefore(el, document.body.firstChild);
+  }
+
+  global.SparkDemoSD = {
+    reseed, buildCases,
+    casosAOA, calidadAOA, teamAOA,
+    buildCasosFile, buildCalidadFile,
+    feedInput, purgeCache, banner,
+    isoWeek, toSerial, fromSerial,
+    CASOS_HEADER, CALIDAD_HEADER,
+    _cat: { PAISES, LOBS, ANALISTAS, STATUS_RAW, CRITERIOS },
+    _util: { rnd, int, pick, wpick, normal, expo, lognormal, addBizMinUTC, teamWindow, isMiamiDST }
+  };
+})(typeof window !== 'undefined' ? window : this);
+
+</script>
 </head>
 <body>
 
@@ -468,6 +1031,17 @@ body{font-family:var(--font-base);background:var(--bg-page);color:var(--text-pri
         </div>
       </div>
     </div>
+    
+<div class="spark-demo-wrap">
+  <button type="button" id="sparkDemoBtn">
+    <span>&#9889;</span><span>Cargar datos demo</span>
+  </button>
+  <div class="spark-demo-note">
+    Genera <b>~80.000 casos ficticios</b> de los ultimos 2 anos con la misma
+    estructura que el archivo real. Ningun dato de Chubb es utilizado.
+  </div>
+</div>
+
     <button class="btn-proceed" id="btn-proceed" disabled onclick="proceedToDash()">Procesar y Continuar</button>
     <br>
     <button class="btn-cached" id="btn-cached" onclick="loadCached()">Usar datos guardados</button>
@@ -5299,6 +5873,133 @@ function renderSLA(casosF){
 }
 
 } /* end startApp */
+</script>
+
+<script id="spark-demo-wire">
+
+(function () {
+  'use strict';
+
+  function onReady(fn) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn);
+    } else { fn(); }
+  }
+
+  onReady(function () {
+    var btn = document.getElementById('sparkDemoBtn');
+    if (!btn) return;
+    SparkDemoSD.banner();
+
+    var label = btn.querySelector('span:last-child');
+    var original = label ? label.textContent : '';
+
+    function say(txt) { if (label) label.textContent = txt; }
+    function status(html) {
+      var el = document.getElementById('up-status');
+      if (el) el.innerHTML = html;
+    }
+    /* Cede el hilo para que el navegador repinte antes del siguiente paso.
+       XLSX.write sobre 1.6M de celdas bloquea; sin esto el boton se ve colgado. */
+    function tick() {
+      return new Promise(function (r) { setTimeout(r, 30); });
+    }
+
+    /* Espera a que Casos Y Calidad esten cargados. Señal: el <div> de estado de
+       cada tarjeta pasa a "Cargado: N ...". Si el parser falla, escribe el error
+       en #up-status y ahi cortamos en vez de quedarnos colgados. */
+    function waitForBothLoaded(timeoutMs) {
+      return new Promise(function (resolve, reject) {
+        var t0 = Date.now();
+        (function poll() {
+          var c = document.getElementById('ustat-casos');
+          var q = document.getElementById('ustat-calidad');
+          var okC = c && /cargado/i.test(c.textContent || '');
+          var okQ = q && /cargado/i.test(q.textContent || '');
+          if (okC && okQ) return resolve(true);
+
+          var us = document.getElementById('up-status');
+          if (us && /var\(--red\)/.test(us.innerHTML || '')) {
+            return reject(new Error('El parser rechazo el archivo demo.'));
+          }
+          if (Date.now() - t0 > (timeoutMs || 180000)) {
+            return reject(new Error('Tiempo de espera agotado al procesar el demo.'));
+          }
+          setTimeout(poll, 120);
+        })();
+      });
+    }
+
+    btn.addEventListener('click', async function () {
+      if (typeof XLSX === 'undefined') {
+        status('<span style="color:var(--red)">SheetJS aun no ha cargado. Espera un momento.</span>');
+        return;
+      }
+      btn.disabled = true;
+      try {
+        /* La cache de IndexedDB persiste lo procesado. Si no la purgamos, los
+           datos demo sobreviven a la recarga y pueden mezclarse con los reales. */
+        say('Limpiando cache...');
+        status('<span class="spinner"></span>Preparando entorno demo...');
+        await SparkDemoSD.purgeCache('dashboard-merged-v1');
+        await tick();
+
+        say('Generando casos...');
+        status('<span class="spinner"></span>Generando ~80.000 casos ficticios...');
+        await tick();
+        SparkDemoSD.reseed();
+        var cases = SparkDemoSD.buildCases();
+
+        say('Empaquetando Casos...');
+        status('<span class="spinner"></span>Construyendo Consolidado (' + cases.length.toLocaleString('es-MX') + ' filas)...');
+        await tick();
+        var fCasos = SparkDemoSD.buildCasosFile(cases);
+
+        say('Empaquetando Calidad...');
+        status('<span class="spinner"></span>Construyendo Feedbacks...');
+        await tick();
+        var fCalidad = SparkDemoSD.buildCalidadFile(cases);
+
+        /* handleCasosFile/handleCalidadFile viven dentro de startApp(): no son
+           alcanzables desde aqui. Alimentamos el <input> real y disparamos
+           'change'. El demo recorre la MISMA ruta de codigo que el flujo con
+           Excel: parser, Worker, validadores, cache. */
+        say('Cargando...');
+        status('<span class="spinner"></span>Leyendo Casos...');
+        await tick();
+        SparkDemoSD.feedInput('fi-casos', fCasos);
+        await tick();
+        SparkDemoSD.feedInput('fi-calidad', fCalidad);
+
+        /* Los dos handlers son asincronos (FileReader + setTimeout), asi que
+           esperamos a que AMBAS tarjetas confirmen carga antes de entrar.
+           No basta con mirar btn-proceed: checkProceed() lo habilita con
+           CUALQUIERA de los dos archivos, y entrariamos sin Calidad. */
+        say('Procesando...');
+        status('<span class="spinner"></span>Procesando ~80.000 casos...');
+        await waitForBothLoaded(180000);
+
+        /* proceedToDash() SI es global (window.proceedToDash). Lo llamamos en
+           vez de .click() para no depender del estado disabled del boton. */
+        if (typeof window.proceedToDash === 'function') {
+          window.proceedToDash();
+        } else {
+          var pb = document.getElementById('btn-proceed');
+          if (pb) pb.click();
+        }
+        say(original);
+      } catch (e) {
+        try { console.error('[SparkDemo]', e); } catch (_) {}
+        status('<span style="color:var(--red)">No se pudo generar el demo: ' +
+               (e && e.message ? e.message : e) + '</span>');
+        say(original);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+})();
+
 </script>
 </body>
 </html>

@@ -1438,6 +1438,449 @@ svg .gridline{stroke:var(--border-soft);stroke-dasharray:2 3;stroke-width:1}
 .toast.visible{opacity:1;transform:translateY(0)}
 .toast.error{background:var(--sem-red);color:var(--sem-red-text);box-shadow:0 6px 20px rgba(255,120,120,.35)}
 </style>
+
+<style id="spark-demo-css">
+#spark-demo-banner{position:sticky;top:0;z-index:99999;background:#C99A3E;color:#1B1B1B;
+ font:600 12px/1.4 'Inter',system-ui,-apple-system,sans-serif;letter-spacing:.02em;
+ text-align:center;padding:7px 14px;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.spark-demo-wrap{display:flex;flex-direction:column;align-items:center;gap:9px;margin:16px 0 4px}
+#sparkDemoBtn{display:inline-flex;align-items:center;gap:9px;cursor:pointer;
+ padding:12px 30px;border-radius:8px;border:1px solid rgba(201,154,62,.45);
+ background:rgba(201,154,62,.12);color:#C99A3E;font-size:14px;font-weight:500;
+ font-family:inherit;transition:background .2s,border-color .2s,transform .2s}
+#sparkDemoBtn:hover:not(:disabled){background:rgba(201,154,62,.22);
+ border-color:rgba(201,154,62,.7);transform:translateY(-2px);
+ box-shadow:0 8px 30px rgba(201,154,62,.18)}
+#sparkDemoBtn:disabled{opacity:.5;cursor:progress;transform:none}
+.spark-demo-note{font:400 11px/1.5 inherit;color:rgba(255,255,255,.42);
+ max-width:470px;text-align:center}
+.spark-demo-note b{color:rgba(255,255,255,.68);font-weight:500}
+</style>
+
+<script id="spark-demo-engine">
+/* ============================================================================
+   SPARK · Demo Data Engine — UWX INTELLIGENCE  ·  spark-demo-uwx.js
+   ----------------------------------------------------------------------------
+   Genera ~85.000 transacciones ficticias (2 años) RESAMPLEANDO las
+   distribuciones reales del Reporte_operativo_UWXpress.xlsx: la mezcla de
+   país × LOB × proceso × HUB, los subprocesos por idioma (Brasil en portugués)
+   y los tiempos por contexto. Empaqueta la hoja "Base de datos" como .xlsx en
+   memoria y la entrega al <input> del dashboard.
+
+   Todos los datos son FICTICIOS. Nombres de analistas, asegurados y números de
+   póliza son valores demo. Ningún dato real de Chubb queda en el archivo.
+
+   CONTRATO VERIFICADO contra Dashboard_UWX.html:
+     · Hoja obligatoria: "Base de datos" (handleFile la busca por nombre exacto).
+     · Hoja opcional "Analistas": no la generamos -> sin filtro de activos, que
+       es el comportamiento histórico del dashboard.
+     · 39 columnas de CONFIG.COLUMNS resueltas por alias; requeridas: País, LOB,
+       Proceso, Responsable HUB, Fecha de recepción en el HUB, SLA, Tiempo en horas.
+     · El master exige dia && ym && pais && lob && proc -> siempre completos.
+     · _excelToDate acepta serial; _yearMonth/_dayStr leen con getUTC*.
+     · Las 15 fechas del MAPA DE PROCESO van como texto es-LATAM (_parseStageDate).
+
+   Autor: Carlos Correa
+   ============================================================================ */
+(function (global) {
+  'use strict';
+
+var DIST = {"joint": [[["Perú", "Property", "New Business", "México"], 57], [["Colombia", "Property", "New Business", "México"], 451], [["Chile", "Property", "New Business", "México"], 95], [["Chile", "Property Multiline", "New Business", "México"], 421], [["Colombia", "Property", "Renewal", "México"], 284], [["Colombia", "Financial Lines", "Renewal", "Colombia"], 771], [["Panamá", "Property", "Renewal", "Colombia"], 195], [["Panamá", "Financial Lines", "Renewal", "Colombia"], 272], [["Chile", "Financial Lines", "Renewal", "Colombia"], 145], [["Perú", "Financial Lines", "Renewal", "Colombia"], 36], [["Argentina", "Property", "Renewal", "México"], 38], [["Argentina", "Marine", "Renewal", "México"], 179], [["Colombia", "Property", "Renewal", "Colombia"], 609], [["Brasil", "Marine", "New Business", "Brasil"], 1806], [["Perú", "Marine", "New Business", "Colombia"], 157], [["Perú", "Marine", "Renewal", "Colombia"], 527], [["Panamá", "Marine", "Renewal", "Colombia"], 345], [["Brasil", "Property", "Renewal", "Brasil"], 1234], [["Brasil", "Property", "New Business", "Brasil"], 1340], [["Brasil", "Casualty", "Endorsement", "Brasil"], 105], [["Perú", "Marine", "Endorsement", "México"], 1240], [["Brasil", "Casualty", "Renewal", "Brasil"], 130], [["Brasil", "Marine", "Renewal", "Brasil"], 1195], [["Brasil", "Financial Lines", "Renewal", "Brasil"], 163], [["Brasil", "Financial Lines", "New Business", "Brasil"], 427], [["Puerto Rico", "Marine", "Renewal", "México"], 1659], [["Puerto Rico", "Marine", "New Business", "México"], 191], [["Chile", "Marine", "New Business", "México"], 203], [["Chile", "Marine", "Renewal", "México"], 116], [["Chile", "Casualty Multiline", "New Business", "México"], 243], [["Panamá", "Marine", "New Business", "Colombia"], 106], [["Brasil", "Marine", "Endorsement", "Brasil"], 1131], [["Chile", "Marine", "Endorsement", "México"], 444], [["Perú", "Casualty", "Endorsement", "México"], 133], [["Colombia", "Marine", "New Business", "México"], 250], [["Chile", "Casualty", "Endorsement", "México"], 276], [["Panamá", "Property", "Endorsement", "México"], 200], [["Chile", "Property", "Endorsement", "México"], 391], [["Puerto Rico", "Property", "Lost & Declined", "México"], 428], [["Chile", "Financial Lines", "Endorsement", "México"], 86], [["Chile", "Property", "Renewal", "México"], 123], [["Brasil", "Casualty", "New Business", "Brasil"], 349], [["Colombia", "Marine", "Renewal", "México"], 21], [["Panamá", "Marine", "Endorsement", "México"], 64], [["Perú", "Casualty", "Lost & Declined", "México"], 94], [["Puerto Rico", "Property", "Renewal", "México"], 251], [["Puerto Rico", "Property", "New Business", "México"], 9], [["Perú", "Environmental", "Lost & Declined", "México"], 2], [["Perú", "Property", "Lost & Declined", "México"], 101], [["Perú", "Marine", "Lost & Declined", "México"], 80], [["Perú", "Financial Lines", "Lost & Declined", "México"], 50], [["Argentina", "Marine", "New Business", "México"], 3], [["Colombia", "Property", "New Business", "Colombia"], 1], [["Panamá", "Marine", "Lost & Declined", "México"], 62], [["Chile", "Marine Multiline", "New Business", "México"], 2], [["Chile", "Property", "Lost & Declined", "México"], 30], [["Colombia", "Property", "Lost & Declined", "México"], 31], [["México", "Property", "Lost & Declined", "México"], 149], [["Panamá", "Property", "Lost & Declined", "México"], 33], [["Brasil", "Financial Lines", "Endorsement", "Brasil"], 24], [["Puerto Rico", "Marine", "Lost & Declined", "México"], 283], [["Puerto Rico", "Financial Lines", "Lost & Declined", "México"], 335], [["Puerto Rico", "Environmental", "Lost & Declined", "México"], 12], [["Puerto Rico", "Casualty", "Lost & Declined", "México"], 4], [["Chile", "Marine", "Lost & Declined", "México"], 25], [["Brasil", "Property", "Endorsement", "Brasil"], 6], [["Ecuador", "Property", "Lost & Declined", "México"], 33], [["Argentina", "Property", "Lost & Declined", "México"], 39], [["Brasil", "Property", "Lost & Declined", "Brasil"], 406], [["Brasil", "Marine", "Lost & Declined", "Brasil"], 23], [["Colombia", "Marine", "Lost & Declined", "México"], 29], [["Panamá", "Property", "Renewal", "México"], 5], [["Argentina", "Financial Lines", "Lost & Declined", "México"], 105], [["Brasil", "Financial Lines", "Lost & Declined", "Brasil"], 1]], "proc_sub": {"New Business": {"Premodelación": 708, "Idp - Trucker": 40, "Actualización": 581, "Emissão": 459, "Modelagem": 1585, "Rctrc": 100, "Rc-Dc": 92, "New Business": 332, "Reserva": 510, "Nacional": 192, "Emissão - Rctr-C": 456, "Emissão - Rcd-C": 458, "Emisión": 39, "Importação": 72, "Modelación": 6, "Proceso De Cierre Mensual": 12, "Broker - Trucker": 10, "Exportação": 37, "Emissão Embarcadero": 130, "Transporte Internacional": 59, "Rctr-C": 42, "Rcd-C": 40, "Transporte Nacional": 78, "Renewal": 1, "Premodelagem": 59, "__NONE__": 13}, "Renewal": {"Premodelación": 1427, "Renewal": 466, "Proceso De Cierre Mensual": 442, "Premodelagem": 1053, "Modelación": 204, "Actualización": 2439, "Emissão": 346, "Emisión": 264, "Rctrc": 155, "Rc-Dc": 125, "Certificado": 333, "Modelagem": 128, "Nacional": 46, "Broker - Trucker": 17, "Endorsement": 1, "Importação": 55, "Emissão - Rctr-C": 195, "Emissão - Rcd-C": 163, "Emissão Embarcadero": 88, "Transporte Internacional": 35, "Rcd-C": 90, "Transporte Nacional": 34, "Rctr-C": 121, "Idp - Trucker": 1, "Exportação": 19, "Renovação Fine Arts": 50, "__NONE__": 1}, "Endorsement": {"Aumento Com Mvto De Prêmio - 22": 79, "__NONE__": 317, "Aumento Sem Mvto De Prêmio - 21": 862, "Aclaratorio - 21": 653, "Cancelamento De Documento - 33": 302, "Cobro De Prima - 22": 690, "Disminución De Prima - 32": 729, "Cancelación - 33": 445, "Redução Sem Mvto De Prêmio - 31": 7, "Redução Com Mvto De Prêmio - 32": 9, "Emissão": 7}, "Lost & Declined": {"Actualización": 1925, "Atualização": 421, "Nacional": 6, "Importação": 2, "Exportação": 1}}, "subtipo": {"Property|||New Business": {"Abraham Saldivar": 9, "__NONE__": 1924, "Karol Delgado": 5, "Mayra Estudillo": 8, "Casandra Rodriguez": 5, "Luis G. Santiago": 2}, "Property Multiline|||New Business": {"__NONE__": 403, "Luis G. Santiago": 7, "Paola Montiel": 9, "Emilio Cruz": 2}, "Property|||Renewal": {"__NONE__": 2738, "Edgar Vazquez": 1}, "Financial Lines|||Renewal": {"MedMal": 926, "D&O": 349, "__NONE__": 90, "MED MAL": 20, "DO": 1, " D&O": 1}, "Marine|||Renewal": {"__NONE__": 2887, "IDP - Trucker": 831, "Broker - Embarcador": 63, "RCTR-C": 4, "RC-DC": 3, "Actualización de datos": 4, "IDP - Embarcador": 203, "Emissão - RCTR-C": 6, "Emissão - RCD-C": 3, "Emissão - RC-DC": 2, "Emilio Cruz": 2, "Broker - Trucker": 29, "Alan Alvarado": 4, "Luz Agreda": 1}, "Marine|||New Business": {"Emissão - RCTR-C": 23, "Emissão - RC-DC": 17, "__NONE__": 904, "IDP - Trucker": 1115, "Emissão - RCD-C": 5, "Transporte Nacional": 3, "IDP - Embarcador": 425, "Broker - Trucker": 77, "Transporte Internacional": 2, "Broker - Embarcador": 139, "Actualización de datos": 1, "Jinet González": 2, "Emilio Cruz": 3}, "Casualty|||Endorsement": {"Prorrogação de Vigência - J": 44, "__NONE__": 21, "Inclusão ou Exclusão de Segurado / Local / Subsidiário - O": 49, "Declaración / Facturación / Provisorio - D": 93, "Prorroga de vigencia - J": 104, "Cambio de beneficiario / Asegurado adicional - S": 3, "Cancelación de póliza por error interno de emisión - 7": 3, "Cancelación de póliza a solicitud de Chubb - 3": 4, "Aumento de suma asegurada y prima - E": 5, "Aumento da Importância Segurada e do Prêmio - E": 1, "Inclusión o exclusión de asegurado / Ubicación / Subsidiario - O": 92, "Cancelamento de Apólice por decisão do Segurado - 2": 2, "Cancelamento de Apólice por solicitação do Corretor ou Agente - 1": 3, "Cambio de datos de asegurado - W": 56, "Actualización razón social / Actualización de contratante - T": 3, "Movimiento interno por error de suscripción - A": 1, "Inclusión o Exclusión de cobertura / cambios de deducible - I": 6, "Actualización de dirección - U": 3, "Cambio de broker o agente - X": 9, "Cancelación de póliza por solicitud de broker o agente - 1": 1, "Cancelación de póliza por decisión de asegurado - 2": 3, "Movimiento interno por error de emisión - C": 1, "Mudança de dados do Segurado - W": 3, "Atualização de Endereço - U": 1, "Ajuste interno por erro do Corretor ou Agente - B": 1, "Redução da Importância Segurada e do Prêmio - N": 1, "Movimiento interno por error de broker o agente - B": 1}, "Marine|||Endorsement": {"__NONE__": 282, "Mudança de Beneficiário / Segurado adicional - S": 416, "Declaración / Facturación / Provisorio - D": 72, "Cancelamento de Apólice por decisão do Segurado - 2": 228, "Aumento de suma asegurada y prima - E": 271, "Reducción de suma asegurada y prima - N": 114, "Cambio de datos de asegurado - W": 50, "Certificado de transportes - M": 832, "Mudança de dados do Segurado - W": 7, "Aumento da Importância Segurada e do Prêmio - E": 35, "Inclusão ou Exclusão de Cobertura / Mudanças nas Franquias - I": 94, "Movimiento interno por error de emisión - C": 10, "Movimiento interno por error de suscripción - A": 5, "Actualización razón social / Actualización de contratante - T": 2, "Inclusión o exclusión de asegurado / Ubicación / Subsidiario - O": 43, "Prorroga de vigencia - J": 34, "Inclusão ou Exclusão de Segurado / Local / Subsidiário - O": 5, "Cancelación de póliza por error interno de emisión - 7": 1, "Cancelación de póliza por decisión de asegurado - 2": 5, "Atualização de Endereço - U": 1, "Cancelación de póliza a solicitud de Chubb - 3": 1, "Inclusión o Exclusión de cobertura / cambios de deducible - I": 10, "Cancelación de póliza por solicitud de broker o agente - 1": 6, "Fora de Escopo": 66, "Compilado de Endosso de Alto Risco": 198, "Mudança de Corretor ou Agente - X": 2, "Cancelamento de Apólice por solicitação do Corretor ou Agente - 1": 73, "Actualización de dirección - U": 2, "Atualização Razão Social / Atualização de Contratante - T": 2, "Cancelación de póliza por error de suscripción - 5": 7, "Ajuste interno por erro de Emissão - C": 2, "Prorrogação de Vigência - J": 1, "Cancelamento de Apólice por instrução da Chubb - 3": 1, "Cancelación de póliza por error de broker o agente - 6": 1}, "Casualty|||Renewal": {"__NONE__": 130}, "Financial Lines|||New Business": {"D&O": 288, "__NONE__": 67, "Tatiane Viana": 72}, "Casualty Multiline|||New Business": {"__NONE__": 236, "Luis G. Santiago": 2, "Paola Montiel": 5}, "Property|||Endorsement": {"Reducción de suma asegurada y prima - N": 78, "Aumento de suma asegurada y prima - E": 235, "Declaración / Facturación / Provisorio - D": 96, "Cambio de beneficiario / Asegurado adicional - S": 9, "Cancelación de póliza a solicitud de Chubb - 3": 3, "Cambio de datos de asegurado - W": 37, "Inclusión o exclusión de asegurado / Ubicación / Subsidiario - O": 33, "Cancelación de póliza por decisión de asegurado - 2": 3, "Movimiento interno por error de suscripción - A": 21, "Prorroga de vigencia - J": 18, "Cancelación de póliza por error interno de emisión - 7": 4, "Cambio de broker o agente - X": 24, "Cancelación de póliza por error de suscripción - 5": 2, "Movimiento interno por error de broker o agente - B": 1, "Actualización de dirección - U": 2, "Cancelación de póliza por solicitud de broker o agente - 1": 5, "Movimiento interno por error de emisión - C": 2, "__NONE__": 20, "Certificado de transportes - M": 2, "Inclusión o Exclusión de cobertura / cambios de deducible - I": 2}, "Property|||Lost & Declined": {"__NONE__": 1220, "Paola Montiel": 10, "Atualização": 20}, "Financial Lines|||Endorsement": {"Movimiento interno por error de broker o agente - B": 2, "Cancelación de póliza por solicitud de broker o agente - 1": 8, "Cancelación de póliza por decisión de asegurado - 2": 4, "Declaración / Facturación / Provisorio - D": 24, "Movimiento interno por error de suscripción - A": 1, "Cancelación de póliza por error de suscripción - 5": 6, "Cancelación de póliza por error de broker o agente - 6": 2, "Cambio de datos de asegurado - W": 4, "Inclusión o exclusión de asegurado / Ubicación / Subsidiario - O": 4, "Cancelamento de Apólice por solicitação do Corretor ou Agente - 1": 3, "Prorrogação de Vigência - J": 9, "Prorroga de vigencia - J": 7, "Actualización de dirección - U": 1, "Mudança de dados do Segurado - W": 2, "Mudança de Corretor ou Agente - X": 1, "__NONE__": 1, "Reducción de suma asegurada y prima - N": 17, "Inclusão ou Exclusão de Segurado / Local / Subsidiário - O": 4, "Fuera de Alcance": 1, "Cancelación de póliza a solicitud de Chubb - 3": 2, "Atualização de Endereço - U": 1, "Inclusión o Exclusión de cobertura / cambios de deducible - I": 2, "Cambio de broker o agente - X": 1, "Fora de Escopo": 2, "Aumento da Importância Segurada e do Prêmio - E": 1}, "Casualty|||New Business": {"casualty": 24, "__NONE__": 325}, "Casualty|||Lost & Declined": {"__NONE__": 98}, "Environmental|||Lost & Declined": {"__NONE__": 14}, "Marine|||Lost & Declined": {"__NONE__": 489, "Paola Montiel": 4, "Broker - Embarcador": 3, "IDP - Embarcador": 6}, "Financial Lines|||Lost & Declined": {"__NONE__": 491}, "Marine Multiline|||New Business": {"__NONE__": 2}}, "th": {"Renewal|||Financial Lines": {"med": 0.583, "sig": 1.148, "max": 11.7}, "Renewal|||Property": {"med": 1.217, "sig": 0.641, "max": 32.9}, "Renewal|||Marine": {"med": 0.333, "sig": 0.814, "max": 11.3}, "New Business|||Marine": {"med": 0.317, "sig": 0.544, "max": 4.9}, "New Business|||Property": {"med": 0.567, "sig": 0.679, "max": 23.8}, "Endorsement|||Casualty": {"med": 0.483, "sig": 0.436, "max": 3.7}, "Renewal|||Casualty": {"med": 0.4, "sig": 1.182, "max": 2.3}, "New Business|||Financial Lines": {"med": 0.233, "sig": 0.2, "max": 0.4}, "New Business|||Casualty Multiline": {"med": 0.417, "sig": 0.249, "max": 4}, "New Business|||Property Multiline": {"med": 0.417, "sig": 0.2, "max": 3.6}, "Endorsement|||Marine": {"med": 0.333, "sig": 0.841, "max": 14.8}, "Endorsement|||Property": {"med": 0.467, "sig": 0.2, "max": 2.1}, "Lost & Declined|||Property": {"med": 0.033, "sig": 0.679, "max": 0.1}, "Endorsement|||Financial Lines": {"med": 0.442, "sig": 0.275, "max": 4}, "New Business|||Casualty": {"med": 0.533, "sig": 0.234, "max": 1.8}, "Lost & Declined|||Casualty": {"med": 0.083, "sig": 0.2, "max": 0.1}, "Lost & Declined|||Marine": {"med": 0.083, "sig": 0.2, "max": 0.4}, "Lost & Declined|||Financial Lines": {"med": 0.083, "sig": 0.2, "max": 0.1}}, "lt": {"New Business": {"med": 0.0277, "p95": 2.214}, "Renewal": {"med": 0.1264, "p95": 1.88}, "Endorsement": {"med": 0, "p95": 0}, "Lost & Declined": {"med": 0.0103, "p95": 0.354}}};
+  /* ── PRNG determinista ──────────────────────────────────────────────────── */
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const SEED = 20260708;
+  let rand = mulberry32(SEED);
+  const reseed = (s) => { rand = mulberry32(s == null ? SEED : s); };
+
+  const rnd = () => rand();
+  const int = (lo, hi) => lo + Math.floor(rand() * (hi - lo + 1));
+  const pick = (a) => a[Math.floor(rand() * a.length)];
+  function wpick(pairs) {                 // [[valor, peso], ...]
+    let t = 0; for (const p of pairs) t += p[1];
+    let r = rand() * t;
+    for (const p of pairs) { r -= p[1]; if (r <= 0) return p[0]; }
+    return pairs[pairs.length - 1][0];
+  }
+  function normal(mu, sd, lo, hi) {
+    let u = 0, v = 0;
+    while (u === 0) u = rand();
+    while (v === 0) v = rand();
+    const n = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    let x = mu + n * sd;
+    if (lo != null && x < lo) x = lo;
+    if (hi != null && x > hi) x = hi;
+    return x;
+  }
+  const lognormal = (med, sig, cap) => {
+    const x = med * Math.exp(normal(0, sig, -3, 3));
+    return cap != null && x > cap ? cap : x;
+  };
+  const NONE = '__NONE__';
+  const un = (v) => (v === NONE || v == null ? null : v);
+  const objPairs = (o) => Object.keys(o).map(k => [k, o[k]]);
+
+  /* ── Serial de Excel ────────────────────────────────────────────────────── */
+  /* _excelToDate(number) => new Date((v-25569)*86400*1000).
+     _yearMonth/_dayStr leen con getUTC*, así que emitimos el instante UTC exacto
+     y el mes/día no se desplaza por el timezone del navegador. */
+  const EXCEL_EPOCH_UTC = Date.UTC(1899, 11, 30);
+  const toSerial = (msUTC) => (msUTC - EXCEL_EPOCH_UTC) / 864e5;
+
+  /* ── Catálogos ──────────────────────────────────────────────────────────── */
+  const SEGMENTACION = [['Completas', 0.90], ['Pendientes', 0.06], ['En progreso', 0.04]];
+
+  /* Analistas evidentemente ficticios, agrupados por HUB para respetar la
+     relación real HUB→analista (el dashboard usa "Responsable HUB" como
+     dimensión de ANALISTA 360). Brasil en portugués, como en el archivo real. */
+  const ANALISTAS_HUB = {
+    'México': ['Ana Demo', 'Bruno Ficticio', 'Carla Ejemplo', 'Diego Muestra',
+      'Elena Prueba', 'Fabio Sintético', 'Gabriela Test', 'Hugo Modelo'],
+    'Brasil': ['Igor Exemplo', 'Julia Fictícia', 'Lucas Modelo', 'Marina Teste',
+      'Nuno Amostra', 'Paula Demo', 'Rafael Sintético', 'Sofia Prova'],
+    'Colombia': ['Tomás Placeholder', 'Ulises Demo', 'Valeria Muestra',
+      'Wilson Test', 'Ximena Ficticia', 'Yolanda Ejemplo']
+  };
+
+  /* Velocidad relativa por analista (hash estable del nombre → 0.62–1.55).
+     Sesgo intencional: sin dispersión, el heatmap de AHT sale plano. */
+  const _speed = {};
+  function analistaSpeed(name) {
+    if (_speed[name] != null) return _speed[name];
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
+    return (_speed[name] = Math.round((0.62 + (Math.abs(h) % 1000) / 1000 * 0.93) * 100) / 100);
+  }
+
+  /* SLA real ≈95% en tiempo. Sesgado por HUB para que el slicer HUB revele algo. */
+  const HUB_SLA = {
+    'México': [[1, 0.968], [2, 0.012], [3, 0.020]],
+    'Brasil': [[1, 0.958], [2, 0.014], [3, 0.028]],
+    'Colombia': [[1, 0.935], [2, 0.020], [3, 0.045]]
+  };
+
+  /* ── Fechas ─────────────────────────────────────────────────────────────── */
+  const isWeekendUTC = (d) => d.getUTCDay() === 0 || d.getUTCDay() === 6;
+  const DOW_W = { 1: 1.30, 2: 1.12, 3: 1.05, 4: 1.00, 5: 0.78 };
+
+  /* Días hábiles hacia atrás terminando AYER: nunca una transacción con fecha
+     futura, que en un dashboard operativo salta a la vista. */
+  function bizDaysBackUTC(n) {
+    const out = [];
+    const d = new Date();
+    d.setUTCHours(0, 0, 0, 0);
+    d.setUTCDate(d.getUTCDate() - 1);
+    while (out.length < n) {
+      if (!isWeekendUTC(d)) out.push(new Date(d.getTime()));
+      d.setUTCDate(d.getUTCDate() - 1);
+    }
+    return out.reverse();
+  }
+
+  /* Recepción en el HUB dentro de jornada (8:00–17:00), sesgada a la mañana. */
+  function receptionUTC(day) {
+    const d = new Date(day.getTime());
+    const m = 480 + Math.floor(Math.abs(normal(0, 1, -3, 3)) * 300);
+    d.setUTCHours(0, Math.min(m, 1020), int(0, 59), 0);
+    return d;
+  }
+
+  /* ── Resampleo por contexto (distribuciones reales) ─────────────────────── */
+  function pickSubproceso(proc) {
+    const m = DIST.proc_sub[proc];
+    return m ? un(wpick(objPairs(m))) : null;
+  }
+  function pickSubtipo(lob, proc) {
+    const m = DIST.subtipo[lob + '|||' + proc];
+    return m ? un(wpick(objPairs(m))) : null;
+  }
+  function tiempoHoras(proc, lob, speed) {
+    const p = DIST.th[proc + '|||' + lob] || { med: 0.4, sig: 0.7, max: 12 };
+    return Math.round(lognormal(p.med, p.sig, p.max) * speed * 1000) / 1000;
+  }
+  function leadTime(proc) {
+    const p = DIST.lt[proc] || { med: 0.05, p95: 2 };
+    const base = rnd() < 0.8 ? p.med : (p.med + rnd() * (p.p95 - p.med));
+    return Math.round(base * 10000) / 10000;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     GENERADOR
+     ══════════════════════════════════════════════════════════════════════════ */
+  function buildRows(opts) {
+    opts = opts || {};
+    const target = opts.total || 85000;
+    const days = bizDaysBackUTC(opts.days || 504);       // ~2 años hábiles
+
+    let wsum = 0;
+    for (const d of days) wsum += (DOW_W[d.getUTCDay()] || 1);
+    const perWeight = target / wsum;
+
+    const joint = DIST.joint;
+    const rows = [];
+    let seq = 0;
+
+    for (const day of days) {
+      const w = DOW_W[day.getUTCDay()] || 1;
+      const base = perWeight * w;
+      const n = Math.max(1, Math.round(normal(base, base * 0.16, 1, base * 2.2)));
+
+      for (let i = 0; i < n; i++) {
+        seq++;
+        /* Resamplear una combinación REAL país×LOB×proceso×HUB: así el demo
+           conserva la mezcla operativa verdadera (Brasil→HUB Brasil,
+           Puerto Rico→HUB México, etc.) en vez de un producto cartesiano. */
+        const c = wpick(joint);
+        const pais = c[0], lob = c[1], proc = c[2], hub = c[3];
+
+        const analista = pick(ANALISTAS_HUB[hub] || ANALISTAS_HUB['México']);
+        const speed = analistaSpeed(analista);
+        const seg = wpick(SEGMENTACION);
+        const pt = (hub === 'Brasil');
+
+        const recepcion = receptionUTC(day);
+        const th = tiempoHoras(proc, lob, speed);
+
+        const pol = (proc === 'Endorsement')
+          ? wpick([[1, 0.89], [2, 0.08], [3, 0.02], [int(4, 8), 0.01]]) : 1;
+
+        const errExt = wpick([['No', 0.80], ['SÍ', 0.15], [NONE, 0.05]]);
+
+        rows.push({
+          seq, recepcion, pais, lob, proc, hub, seg, analista, pt,
+          subproc: pickSubproceso(proc),
+          subtipo: (proc === 'Endorsement') ? pickSubtipo(lob, proc) : null,
+          th,
+          totalMin: Math.max(1, Math.round(th * 60)),
+          hpt: Math.round(th * (0.8 + rnd() * 0.6) * 1000) / 1000,
+          lt: leadTime(proc),
+          pol,
+          sla: wpick(HUB_SLA[hub] || HUB_SLA['México']),
+          cal: wpick([['SÍ', 0.985], ['No', 0.010], ['N/A', 0.005]]),
+          errExt,
+          errFecha: rnd() < 0.006 ? 1 : 0,
+          fastTrack: (lob === 'Property' || lob === 'Casualty')
+            ? wpick([[NONE, 0.66], ['Standard', 0.30], ['Fast Track', 0.04]]) : NONE,
+          tipoErrExt: errExt === 'SÍ'
+            ? pick(pt ? ['Erro de designação', 'Erro de sistema', 'Falta de informação', 'Petição duplicada']
+                      : ['Error de asignación', 'Error de sistema', 'Falta de información', 'Error en registro de transacción'])
+            : (pt ? 'Sem erro' : 'Sin error'),
+          tipoErrInt: pt ? 'Sem erro' : 'Sin error',
+          estatus: seg === 'En progreso' ? 'En proceso' : 'Terminado'
+        });
+      }
+    }
+    return rows;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     AOA: hoja "Base de datos" — las 99 columnas del archivo real, en orden.
+     Mantener el orden importa: si un alias no resolviera, el índice de respaldo
+     de CONFIG.COLUMNS aterriza en la columna correcta y no en otra.
+     ══════════════════════════════════════════════════════════════════════════ */
+  const HEADER = [
+    'Fecha de recepción en el HUB', 'País', 'LOB', 'Suscriptor', 'Proceso',
+    'Sub proceso/Tipo de endoso', 'Subtipo de endoso', 'Responsable HUB', 'Asegurado',
+    'Prima neta', 'Número de póliza', 'ID G Next', 'ID Pipeline', 'Número de ubicaciones',
+    'Vencimiento en días', 'TUG', 'G Next', 'Análisis endoso', 'Preparación endoso',
+    'Cierre endoso', 'Chubbwin', 'Mendix', 'Workview', 'Pipeline', 'Carpeta', 'OFAC',
+    'MCore', 'MBC', 'Total (min)', 'Estatus', 'Estatus de seguimiento a UW',
+    'Fecha de entrega a UW', 'Fecha de envío del endoso al broker',
+    'Fecha de la última actualización de UW', 'Fecha de envío de solicitud de aprobación a UW',
+    'Fecha de recepción de aprobación de UW', 'Fecha de envío a emisión',
+    'Fecha de cierre de proceso de endoso', 'Lead Time UWX', 'Lead Time UW',
+    'Lead Time análisis HUB', 'Lead Time preparación Emisión HUB',
+    'Lead Time Endosos sin Emisión', 'Lead Time Endosos-Emisión', 'Número de propuesta (DCI)',
+    'Número de endoso', '¿El HUB cumple con los parámetros de calidad?', 'Error externo al HUB',
+    'Observaciones', 'Combinada', 'Número de semana', 'Tiempo en horas', 'Var', 'UWP', 'SLA',
+    'Fecha de inicio de Premodelación', 'Fecha de terminación de Premodelación',
+    'Fecha de inicio de Modelación', 'Fecha de terminación de Modelación',
+    'Fecha de inicio de Emisión', 'Fecha de terminación de Emisión',
+    'Fecha de inicio de Actualización', 'Fecha de terminación de Actualización',
+    'ID Terrorismo', 'Fecha de vencimiento', 'SLA Días', 'SLA Premodelación',
+    'SLA Modelación', 'SLA Emisión', 'SLA Actualización', 'Chubb Marine', 'Chubb Transportes',
+    'Meridian', 'SIS', 'Olas', 'Segmentación', 'Segmento', 'CIP', 'Worksheet', 'D&O',
+    'Tiempo total', 'Tiempo por transacción', 'Cantidad de pólizas', 'Horas por transacción',
+    'HUB', 'ATH.1', 'LT Neto EN', 'LT Neto NB & RE', 'País-LOB', 'Proceso y Subproceso',
+    'LOB-Proceso-Analista', 'Tipo de error interno', 'Tipo de error externo',
+    'Fast Track-Standard', 'Adicional', 'Fecha de recepción original en UW',
+    'Lead Time UW-HUB', 'Errores de fechas', 'ID'
+  ];
+  const HX = {};
+  HEADER.forEach((h, i) => { HX[h] = i; });
+
+  function isoWeek(d) {
+    const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+    const day = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - day);
+    const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil(((t - y0) / 86400000 + 1) / 7);
+  }
+
+  /* Etapas del MAPA DE PROCESO: sólo para Property/Endorsement, en el formato
+     de texto es-LATAM que espera _parseStageDate ("DD/MM/YYYY h:mm:ss a. m."). */
+  function stageText(d) {
+    const p = (n) => String(n).padStart(2, '0');
+    let h = d.getUTCHours();
+    const ap = h >= 12 ? 'p. m.' : 'a. m.';
+    let h12 = h % 12; if (h12 === 0) h12 = 12;
+    return d.getUTCDate() + '/' + (d.getUTCMonth() + 1) + '/' + d.getUTCFullYear() +
+      ' ' + h12 + ':' + p(d.getUTCMinutes()) + ':' + p(d.getUTCSeconds()) + ' ' + ap;
+  }
+
+  function baseDeDatosAOA(rows) {
+    const out = [HEADER.slice()];
+    for (const r of rows) {
+      const id = String(r.seq).padStart(6, '0');
+      const rec = r.recepcion;
+      const row = new Array(HEADER.length).fill(null);
+
+      row[HX['Fecha de recepción en el HUB']] = toSerial(rec.getTime());
+      row[HX['País']] = r.pais;
+      row[HX['LOB']] = r.lob;
+      row[HX['Suscriptor']] = r.pt ? 'UW Demo BR' : 'UW Demo LATAM';
+      row[HX['Proceso']] = r.proc;
+      row[HX['Sub proceso/Tipo de endoso']] = r.subproc;
+      row[HX['Subtipo de endoso']] = r.subtipo;
+      row[HX['Responsable HUB']] = r.analista;
+      row[HX['Asegurado']] = 'Asegurado Demo ' + id;
+      row[HX['Número de póliza']] = 'POL-DEMO-' + id;
+      row[HX['ID G Next']] = 'GN-' + id;
+      row[HX['ID Pipeline']] = 'PIP-' + id;
+      row[HX['Número de ubicaciones']] =
+        (r.lob === 'Property' || r.lob === 'Marine') ? (rnd() < 0.05 ? int(2, 40) : 1) : 1;
+      row[HX['Total (min)']] = r.totalMin;
+      row[HX['Estatus']] = r.estatus;
+      row[HX['Lead Time UWX']] = r.lt;
+      row[HX['Número de semana']] = isoWeek(rec);
+      row[HX['Tiempo en horas']] = r.th;
+      row[HX['SLA']] = r.sla;
+      row[HX['Segmentación']] = r.seg;
+      row[HX['Tiempo total']] = Math.round(r.th * 60 * 1.02) / 60;
+      row[HX['Cantidad de pólizas']] = r.pol;
+      row[HX['Horas por transacción']] = r.hpt;
+      row[HX['HUB']] = r.hub;
+      row[HX['¿El HUB cumple con los parámetros de calidad?']] = r.cal;
+      row[HX['Error externo al HUB']] = un(r.errExt);
+      row[HX['Tipo de error interno']] = r.tipoErrInt;
+      row[HX['Tipo de error externo']] = r.tipoErrExt;
+      row[HX['Fast Track-Standard']] = un(r.fastTrack);
+      row[HX['Errores de fechas']] = r.errFecha;
+      row[HX['ID']] = id;
+
+      /* SLA por subproceso: sólo Property los reporta (pestaña CALIDAD). */
+      if (r.lob === 'Property') {
+        row[HX['SLA Premodelación']] = wpick([[1, 0.985], [2, 0.008], [3, 0.007]]);
+        row[HX['SLA Modelación']] = wpick([[1, 0.994], [2, 0.002], [3, 0.004]]);
+        row[HX['SLA Emisión']] = wpick([[1, 0.990], [3, 0.010]]);
+        row[HX['SLA Actualización']] = wpick([[1, 0.990], [3, 0.010]]);
+      }
+
+      /* Etapas del mapa de proceso: horas desde la recepción, dentro del tope
+         de validez del agregador (<365 días, > -48h). */
+      const stage = (hOffset) => stageText(new Date(rec.getTime() + hOffset * 3600000));
+      if (r.proc === 'Endorsement') {
+        const a = 1 + rnd() * 6;
+        row[HX['Fecha de entrega a UW']] = stage(a);
+        row[HX['Fecha de envío del endoso al broker']] = stage(a + 2 + rnd() * 10);
+        row[HX['Fecha de cierre de proceso de endoso']] = stage(a + 4 + rnd() * 20);
+      }
+      if (r.lob === 'Property') {
+        const p0 = 0.5 + rnd() * 3;
+        row[HX['Fecha de inicio de Premodelación']] = stage(p0);
+        row[HX['Fecha de terminación de Premodelación']] = stage(p0 + 0.5 + rnd() * 4);
+        const m0 = p0 + 5 + rnd() * 10;
+        row[HX['Fecha de inicio de Modelación']] = stage(m0);
+        row[HX['Fecha de terminación de Modelación']] = stage(m0 + 1 + rnd() * 6);
+        const e0 = m0 + 6 + rnd() * 14;
+        row[HX['Fecha de inicio de Emisión']] = stage(e0);
+        row[HX['Fecha de terminación de Emisión']] = stage(e0 + 0.5 + rnd() * 4);
+      }
+
+      out.push(row);
+    }
+    return out;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     Empaquetado y entrega
+     ══════════════════════════════════════════════════════════════════════════ */
+  function buildFile(rows) {
+    if (typeof XLSX === 'undefined') throw new Error('SheetJS no disponible');
+    const wb = XLSX.utils.book_new();
+    /* El nombre "Base de datos" es obligatorio: handleFile() lo busca por nombre
+       exacto y lanza sheet_missing si no está. */
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(baseDeDatosAOA(rows)), 'Base de datos');
+    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array', compression: true });
+    return new File([buf], 'DEMO_Reporte_operativo_UWXpress.xlsx',
+      { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+
+  /* handleFile() vive en el scope del módulo del dashboard. En vez de tocar
+     internals, alimentamos el <input type=file> real y disparamos 'change':
+     el demo recorre la MISMA ruta que el Excel real (Worker, agregador, caché). */
+  function feedInput(inputId, file) {
+    const input = document.getElementById(inputId);
+    if (!input) throw new Error('Input no encontrado: ' + inputId);
+    let ok = false;
+    if (typeof DataTransfer !== 'undefined') {
+      try {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        ok = input.files && input.files.length === 1;
+      } catch (e) { ok = false; }
+    }
+    if (!ok) {
+      const fl = { 0: file, length: 1, item: (i) => (i === 0 ? file : null) };
+      if (typeof Symbol !== 'undefined' && Symbol.iterator) fl[Symbol.iterator] = function* () { yield file; };
+      Object.defineProperty(input, 'files', { value: fl, configurable: true });
+    }
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }
+
+  /* La caché guarda el RESULTADO AGREGADO. Sin purgarla, los datos demo
+     sobreviven a la recarga y pueden mezclarse con los reales del usuario. */
+  function purgeCache(dbName) {
+    return new Promise((resolve) => {
+      if (!global.indexedDB) return resolve(false);
+      let done = false;
+      const fin = (v) => { if (!done) { done = true; resolve(v); } };
+      const req = indexedDB.deleteDatabase(dbName || 'uwx-intel-cache');
+      req.onsuccess = () => fin(true);
+      req.onerror = () => fin(false);
+      req.onblocked = () => fin(false);
+      setTimeout(() => fin(false), 2500);
+    });
+  }
+
+  function banner(text) {
+    if (document.getElementById('spark-demo-banner')) return;
+    const el = document.createElement('div');
+    el.id = 'spark-demo-banner';
+    el.textContent = text || 'Datos simulados · Demostración de portafolio · Ningún dato real de Chubb es utilizado';
+    el.style.cssText = 'position:sticky;top:0;z-index:99999;background:#C99A3E;color:#1B1B1B;' +
+      "font:600 12px/1.4 'Inter',system-ui,-apple-system,sans-serif;letter-spacing:.02em;" +
+      'text-align:center;padding:7px 14px;box-shadow:0 1px 4px rgba(0,0,0,.15)';
+    document.body.insertBefore(el, document.body.firstChild);
+  }
+
+  global.SparkDemoUWX = {
+    reseed, buildRows, baseDeDatosAOA, buildFile,
+    feedInput, purgeCache, banner, isoWeek, toSerial,
+    HEADER, ANALISTAS_HUB, _dist: DIST,
+    _util: { rnd, int, pick, wpick, normal, lognormal, analistaSpeed, stageText }
+  };
+})(typeof window !== 'undefined' ? window : this);
+
+</script>
 </head>
 <body>
 <!-- =================== BOOT OVERLAY (descarga SheetJS desde CDN) =================== -->
@@ -1484,6 +1927,18 @@ svg .gridline{stroke:var(--border-soft);stroke-dasharray:2 3;stroke-width:1}
         <div class="ucard-sub">Hoja "Base de datos" requerida</div>
       </div>
     </div>
+    
+    <div class="spark-demo-wrap">
+      <button type="button" id="sparkDemoBtn">
+        <span>&#9889;</span><span>Cargar datos demo</span>
+      </button>
+      <div class="spark-demo-note">
+        Genera <b>~85.000 transacciones ficticias</b> de los ultimos 2 anos,
+        resampleando la mezcla real de pais x LOB x proceso x HUB.
+        Ningun dato de Chubb es utilizado.
+      </div>
+    </div>
+
     <button class="btn-cached" id="btn-cached" type="button">Usar datos guardados</button>
     <div id="up-status">o arrastra el archivo a cualquier parte de esta ventana</div>
     <div class="upload-footer">Desarrollado por Carlos Correa &middot; <a href="mailto:carlos.correa@chubb.com">carlos.correa@chubb.com</a></div>
@@ -6862,6 +7317,76 @@ window.toggleMS = toggleMS;
 // loader la invoca tras cargar SheetJS) y el body ya está parseado.
 init();
 } /* === end startApp === */
+</script>
+
+<script id="spark-demo-wire">
+
+(function () {
+  'use strict';
+  function onReady(fn){
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
+  }
+  onReady(function(){
+    var btn = document.getElementById('sparkDemoBtn');
+    if(!btn) return;
+    SparkDemoUWX.banner();
+
+    var label = btn.querySelector('span:last-child');
+    var original = label ? label.textContent : '';
+    function say(t){ if(label) label.textContent = t; }
+    function status(html){
+      var el = document.getElementById('up-status');
+      if(el) el.innerHTML = html;
+    }
+    /* Cede el hilo para que el navegador repinte: XLSX.write sobre ~8.4M celdas
+       bloquea varios segundos y sin esto el boton se ve colgado. */
+    function tick(){ return new Promise(function(r){ setTimeout(r, 30); }); }
+
+    btn.addEventListener('click', async function(){
+      if(typeof XLSX === 'undefined'){
+        status('SheetJS aun no ha cargado. Espera unos segundos y reintenta.');
+        return;
+      }
+      btn.disabled = true;
+      try{
+        /* La cache guarda el resultado YA AGREGADO. Sin purgarla, los datos demo
+           sobreviven a la recarga y pueden mezclarse con los reales. */
+        say('Limpiando cache...');
+        status('Preparando entorno demo...');
+        await SparkDemoUWX.purgeCache('uwx-intel-cache');
+        await tick();
+
+        say('Generando transacciones...');
+        status('Generando ~85.000 transacciones ficticias...');
+        await tick();
+        SparkDemoUWX.reseed();
+        var rows = SparkDemoUWX.buildRows();
+
+        say('Empaquetando XLSX...');
+        status('Construyendo "Base de datos" (' + rows.length.toLocaleString('es-MX') + ' filas)... esto tarda unos segundos.');
+        await tick();
+        var file = SparkDemoUWX.buildFile(rows);
+
+        /* handleFile() no es alcanzable desde aqui: alimentamos el <input> real
+           y disparamos 'change'. El demo recorre la MISMA ruta que el Excel de
+           verdad -> Web Worker, agregador, validacion de columnas y cache. */
+        say('Procesando...');
+        status('Cargando ' + (file.size/1048576).toFixed(1) + ' MB en el dashboard...');
+        await tick();
+        SparkDemoUWX.feedInput('fi-uwx', file);
+        say(original);
+      }catch(e){
+        try{ console.error('[SparkDemo]', e); }catch(_){}
+        status('No se pudo generar el demo: ' + (e && e.message ? e.message : e));
+        say(original);
+      }finally{
+        btn.disabled = false;
+      }
+    });
+  });
+})();
+
 </script>
 </body>
 </html>
