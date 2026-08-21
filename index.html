@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Carlos Correa — Portafolio AI & Operaciones</title>
+<meta name="description" content="Portafolio de Carlos Correa, Project Manager e Ingeniero de Sistemas con MBA: dashboards, automatización y herramientas con AI para operaciones en LATAM.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #0D1B2A;
@@ -16,11 +20,14 @@
     --property: #185FA5;
     --casualty: #854F0B;
     --marine: #0F6E56;
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: var(--font-body);
     font-weight: 400;
     color: var(--ink);
     background: var(--paper);
@@ -28,6 +35,17 @@
     -webkit-font-smoothing: antialiased;
   }
   .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+  a, button { touch-action: manipulation; }
+
+  /* ---- Focus states ---- */
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent-light);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  header a:focus-visible, header button:focus-visible, footer a:focus-visible {
+    outline-color: #fff;
+  }
 
   /* ---- Header / Hero ---- */
   header {
@@ -47,7 +65,75 @@
     background-size: 32px 32px;
     pointer-events: none;
   }
+
+  @keyframes heroReveal {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .top-bar, .hero-tag, h1, .hero-sub, .hero-meta {
+    animation: heroReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .top-bar { animation-delay: 0s; }
+  .hero-tag { animation-delay: 0.08s; }
+  h1 { animation-delay: 0.16s; }
+  .hero-sub { animation-delay: 0.24s; }
+  .hero-meta { animation-delay: 0.32s; }
+
+  /* ---- Top bar: brand mark + language switch ---- */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 44px;
+    position: relative;
+  }
+  .brand-mark {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: #C9D6E5;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.18s ease, color 0.18s ease;
+  }
+  .brand-mark:hover { border-color: #fff; color: #fff; }
+
+  .lang-toggle {
+    display: inline-flex;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .lang-btn {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: #A9BDD4;
+    background: transparent;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 16px;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+  .lang-btn[aria-pressed="true"] { background: #fff; color: var(--ink); }
+  .lang-btn:hover:not([aria-pressed="true"]) { color: #fff; }
+
   .hero-tag {
+    font-family: var(--font-mono);
     font-size: 12px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -58,10 +144,12 @@
   }
   .hero-tag span { color: #8FB4D9; }
   h1 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
     font-size: clamp(34px, 6vw, 54px);
     line-height: 1.05;
-    font-weight: 500;
-    letter-spacing: -0.02em;
+    font-weight: 600;
+    letter-spacing: -0.01em;
     margin-bottom: 20px;
     position: relative;
   }
@@ -79,11 +167,15 @@
     position: relative;
   }
   .hero-meta div { font-size: 13px; color: #A9BDD4; }
-  .hero-meta strong { display: block; color: #fff; font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+  .hero-meta strong {
+    font-family: var(--font-mono);
+    display: block; color: #fff; font-size: 22px; font-weight: 500; letter-spacing: -0.01em;
+  }
 
   /* ---- Sections ---- */
   section { padding: 56px 0; }
   .section-label {
+    font-family: var(--font-mono);
     font-size: 12px;
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -92,9 +184,11 @@
     margin-bottom: 8px;
   }
   h2 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
     font-size: clamp(24px, 4vw, 32px);
     font-weight: 500;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.008em;
     margin-bottom: 6px;
   }
   .section-intro { color: var(--muted); max-width: 620px; margin-bottom: 36px; }
@@ -122,8 +216,9 @@
     margin-bottom: 14px;
   }
   .chip {
+    font-family: var(--font-mono);
     font-size: 11px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     font-weight: 500;
     padding: 4px 10px;
@@ -139,7 +234,11 @@
   .chip.auto { background: #E4F1F4; color: #1B6E7E; }
   .chip.vibe { background: #FFF0E0; color: #B5621A; }
   .chip.live { background: #E5F3EE; color: #0F6E56; }
-  .card h3 { font-size: 19px; font-weight: 500; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .card h3 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 19px; font-weight: 500; letter-spacing: -0.005em; margin-bottom: 8px;
+  }
   .card p { font-size: 14.5px; color: var(--muted); flex: 1; }
   .stack {
     display: flex;
@@ -148,6 +247,7 @@
     margin-top: 16px;
   }
   .stack span {
+    font-family: var(--font-mono);
     font-size: 11px;
     color: var(--accent-light);
     background: #F2F6FA;
@@ -157,6 +257,7 @@
   }
   .card-link {
     margin-top: 16px;
+    padding: 3px 0;
     font-size: 13px;
     font-weight: 500;
     color: var(--accent);
@@ -167,7 +268,7 @@
   }
   .card-link::after { content: "→"; transition: transform 0.15s ease; }
   .card-link:hover::after { transform: translateX(3px); }
-  .card-link.disabled { color: var(--muted); pointer-events: none; }
+  .card-link.disabled { color: var(--muted); cursor: default; }
   .card-link.disabled::after { content: ""; }
 
   /* ---- About ---- */
@@ -178,8 +279,26 @@
     border-radius: 12px;
     padding: 30px 32px;
   }
-  .about-box p { color: #3A4756; margin-bottom: 14px; }
+  .about-box p { color: #3A4756; max-width: 680px; margin-bottom: 14px; }
   .about-box p:last-child { margin-bottom: 0; }
+
+  .about-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 26px;
+    padding-bottom: 26px;
+    border-bottom: 1px solid var(--line);
+  }
+  .about-stats div { display: flex; flex-direction: column; gap: 4px; }
+  .about-stats strong {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.01em;
+  }
+  .about-stats span { font-size: 12.5px; color: var(--muted); line-height: 1.35; }
 
   /* ---- Footer ---- */
   footer {
@@ -193,52 +312,78 @@
   footer a:hover { text-decoration: underline; }
   .footer-links { margin-bottom: 14px; display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
 
+  /* ---- Scroll reveal (added by JS only when motion is allowed) ---- */
+  .will-reveal { opacity: 0; transform: translateY(18px); }
+  .will-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+  }
+
   @media (max-width: 680px) {
     .grid { grid-template-columns: 1fr; }
-    header { padding: 56px 0 48px; }
-    .hero-meta { gap: 20px; }
+    header { padding: 52px 0 44px; }
+    .hero-meta { gap: 18px 24px; }
+    .top-bar { margin-bottom: 32px; }
+    .about-stats { grid-template-columns: repeat(2, 1fr); }
+    section { padding: 44px 0; }
+  }
+  @media (max-width: 400px) {
+    .lang-btn { padding: 9px 12px; font-size: 11px; }
+    .brand-mark { width: 36px; height: 36px; }
+    .card { padding: 22px 20px 20px; }
+    .about-box { padding: 24px 20px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; scroll-behavior: auto; }
+    * { transition: none !important; animation: none !important; scroll-behavior: auto; }
   }
 </style>
 </head>
 <body>
 
-<header>
+<header id="top">
   <div class="wrap">
-    <div class="hero-tag">Operaciones · Datos · <span>Herramientas con AI</span></div>
+    <div class="top-bar">
+      <a class="brand-mark" href="https://www.linkedin.com/in/ingcarloscorrea/" target="_blank" rel="noopener" data-i18n-aria="brand_aria" aria-label="Perfil de LinkedIn de Carlos Correa">CC</a>
+      <div class="lang-toggle" role="group" data-i18n-aria="lang_group_aria" aria-label="Selector de idioma">
+        <button type="button" class="lang-btn" data-lang="es" aria-pressed="true">ES</button>
+        <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+    <div class="hero-tag" data-i18n-html="hero_tag">Operaciones · Datos · <span>Herramientas con AI</span></div>
     <h1>Carlos Correa</h1>
-    <p class="hero-sub">Construyo dashboards operativos, agentes y herramientas internas que convierten datos dispersos en decisiones. Trabajo en operaciones de seguros para 9 países de LATAM, donde diseño y despliego mis propias soluciones.</p>
+    <p class="hero-sub" data-i18n="hero_sub">Construyo dashboards operativos, agentes y herramientas internas que convierten datos dispersos en decisiones. Trabajo en operaciones de seguros para 9 países de LATAM, donde diseño y despliego mis propias soluciones.</p>
     <div class="hero-meta">
-      <div><strong>9</strong>países LATAM</div>
-      <div><strong>2</strong>proyectos en vivo</div>
-      <div><strong>+5</strong>herramientas propias</div>
+      <div><strong>9</strong><span data-i18n="stat_countries">países LATAM</span></div>
+      <div><strong>2</strong><span data-i18n="stat_live_projects">proyectos en vivo</span></div>
+      <div><strong>+5</strong><span data-i18n="stat_own_tools">herramientas propias</span></div>
     </div>
   </div>
 </header>
 
 <section id="dashboards">
   <div class="wrap">
-    <div class="section-label">01 — Dashboards</div>
-    <h2>Inteligencia operativa</h2>
-    <p class="section-intro">Aplicaciones de una sola página, offline-first, que viven en entornos corporativos. Arquitectura en vanilla JS con Chart.js, SheetJS, Web Workers e IndexedDB.</p>
+    <div class="section-head">
+      <div class="section-label" data-i18n="sec1_label">01 — Dashboards</div>
+      <h2 data-i18n="sec1_title">Inteligencia operativa</h2>
+      <p class="section-intro" data-i18n="sec1_intro">Aplicaciones de una sola página, offline-first, que viven en entornos corporativos. Arquitectura en vanilla JS con Chart.js, SheetJS, Web Workers e IndexedDB.</p>
+    </div>
     <div class="grid">
 
       <div class="card">
         <div class="card-top"><span class="chip dash">Dashboard</span></div>
-        <h3>Dashboard de Procesamiento</h3>
-        <p>Dashboard que mide el procesamiento de casos de seguros: tiempos de manejo, ciclo, cumplimiento de SLA y productividad por analista, status y país. Incluye lógica dual de SLA y comparativas mes a mes.</p>
+        <h3 data-i18n="card_dash1_title">Dashboard de Procesamiento</h3>
+        <p data-i18n="card_dash1_desc">Dashboard que mide el procesamiento de casos de seguros: tiempos de manejo, ciclo, cumplimiento de SLA y productividad por analista, status y país. Incluye lógica dual de SLA y comparativas mes a mes.</p>
         <div class="stack"><span>Vanilla JS</span><span>Chart.js</span><span>SheetJS</span><span>IndexedDB</span></div>
-        <a class="card-link" href="Dashboards/DASHBOARD%20V2.HTML">Ver dashboard</a>
+        <a class="card-link" data-i18n="cta_view_dashboard" href="Dashboards/DASHBOARD%20V2.HTML">Ver dashboard</a>
       </div>
 
       <div class="card">
         <div class="card-top"><span class="chip dash">Dashboard</span></div>
-        <h3>Dashboard de Producción y Calidad</h3>
-        <p>Dashboard paralelo con la misma arquitectura, enfocado en producción y calidad. Donut charts, barras horizontales, tarjetas de SLA y tablas de sub-proceso sobre un modelo de datos multi-tabla.</p>
+        <h3 data-i18n="card_dash2_title">Dashboard de Producción y Calidad</h3>
+        <p data-i18n="card_dash2_desc">Dashboard paralelo con la misma arquitectura, enfocado en producción y calidad. Donut charts, barras horizontales, tarjetas de SLA y tablas de sub-proceso sobre un modelo de datos multi-tabla.</p>
         <div class="stack"><span>Vanilla JS</span><span>Chart.js</span><span>Web Workers</span></div>
-        <a class="card-link" href="Dashboards/Dashboard%20UWX.html">Ver dashboard</a>
+        <a class="card-link" data-i18n="cta_view_dashboard" href="Dashboards/Dashboard%20UWX.html">Ver dashboard</a>
       </div>
 
     </div>
@@ -247,25 +392,27 @@
 
 <section id="vibe">
   <div class="wrap">
-    <div class="section-label">02 — Vibe coding</div>
-    <h2>Proyectos para entrevista técnica</h2>
-    <p class="section-intro">Dos proyectos en vivo construidos con vibe coding para una entrevista técnica, apoyándome en Qwen, Claude Code y Lovable. Una landing de producto y el dashboard que le daría seguimiento.</p>
+    <div class="section-head">
+      <div class="section-label" data-i18n="sec2_label">02 — Vibe coding</div>
+      <h2 data-i18n="sec2_title">Proyectos para entrevista técnica</h2>
+      <p class="section-intro" data-i18n="sec2_intro">Dos proyectos en vivo construidos con vibe coding para una entrevista técnica, apoyándome en Qwen, Claude Code y Lovable. Una landing de producto y el dashboard que le daría seguimiento.</p>
+    </div>
     <div class="grid">
 
       <div class="card">
-        <div class="card-top"><span class="chip vibe">Vibe coding</span><span class="chip live">En vivo</span></div>
-        <h3>Landing — Microseguro de movilidad</h3>
-        <p>Landing page de un microseguro digital: hero, coberturas, planes modulares con tabla comparativa, cotizador interactivo que calcula precio estimado por perfil y formulario de captura de leads.</p>
+        <div class="card-top"><span class="chip vibe">Vibe coding</span><span class="chip live" data-i18n="chip_live">En vivo</span></div>
+        <h3 data-i18n="card_landing_title">Landing — Microseguro de movilidad</h3>
+        <p data-i18n="card_landing_desc">Landing page de un microseguro digital: hero, coberturas, planes modulares con tabla comparativa, cotizador interactivo que calcula precio estimado por perfil y formulario de captura de leads.</p>
         <div class="stack"><span>Qwen</span><span>Claude Code</span><span>Lovable</span></div>
-        <a class="card-link" href="https://movilodad-bolivar.lovable.app/movilidad.html" target="_blank" rel="noopener">Ver landing</a>
+        <a class="card-link" data-i18n="cta_view_landing" href="https://movilodad-bolivar.lovable.app/movilidad.html" target="_blank" rel="noopener">Ver landing</a>
       </div>
 
       <div class="card">
-        <div class="card-top"><span class="chip vibe">Vibe coding</span><span class="chip live">En vivo</span></div>
-        <h3>Dashboard — Seguimiento de la landing</h3>
-        <p>Dashboard de analytics (con datos dummy) que muestra cómo se mediría el desempeño de la landing: funnel de conversión, leads por plan y ciudad, segmentos demográficos, score de riesgo y proyección de prima.</p>
+        <div class="card-top"><span class="chip vibe">Vibe coding</span><span class="chip live" data-i18n="chip_live">En vivo</span></div>
+        <h3 data-i18n="card_vibedash_title">Dashboard — Seguimiento de la landing</h3>
+        <p data-i18n="card_vibedash_desc">Dashboard de analytics (con datos dummy) que muestra cómo se mediría el desempeño de la landing: funnel de conversión, leads por plan y ciudad, segmentos demográficos, score de riesgo y proyección de prima.</p>
         <div class="stack"><span>Qwen</span><span>Claude Code</span><span>Lovable</span></div>
-        <a class="card-link" href="https://dashboard-movilidad.lovable.app/dashboard.html" target="_blank" rel="noopener">Ver dashboard</a>
+        <a class="card-link" data-i18n="cta_view_dashboard" href="https://dashboard-movilidad.lovable.app/dashboard.html" target="_blank" rel="noopener">Ver dashboard</a>
       </div>
 
     </div>
@@ -274,89 +421,91 @@
 
 <section id="tools" style="background:#EDF1F6;">
   <div class="wrap">
-    <div class="section-label">03 — Herramientas</div>
-    <h2>Apps y utilidades</h2>
-    <p class="section-intro">Herramientas standalone en HTML que resuelven problemas concretos del día a día operativo y personal.</p>
+    <div class="section-head">
+      <div class="section-label" data-i18n="sec3_label">03 — Herramientas</div>
+      <h2 data-i18n="sec3_title">Apps y utilidades</h2>
+      <p class="section-intro" data-i18n="sec3_intro">Herramientas standalone en HTML que resuelven problemas concretos del día a día operativo y personal.</p>
+    </div>
     <div class="grid">
 
       <div class="card">
-        <div class="card-top"><span class="chip tool">Herramienta</span></div>
-        <h3>Generador de Bases por País</h3>
-        <p>App HTML que divide datos de Excel por país de LATAM automáticamente, eliminando trabajo manual repetitivo en la generación de bases operativas.</p>
+        <div class="card-top"><span class="chip tool" data-i18n="chip_tool">Herramienta</span></div>
+        <h3 data-i18n="card_tool1_title">Generador de Bases por País</h3>
+        <p data-i18n="card_tool1_desc">App HTML que divide datos de Excel por país de LATAM automáticamente, eliminando trabajo manual repetitivo en la generación de bases operativas.</p>
         <div class="stack"><span>HTML</span><span>SheetJS</span><span>JS</span></div>
-        <a class="card-link" href="Herramientas/LnD-Generator.html">Abrir herramienta</a>
+        <a class="card-link" data-i18n="cta_open_tool" href="Herramientas/LnD-Generator.html">Abrir herramienta</a>
       </div>
 
       <div class="card">
-        <div class="card-top"><span class="chip tool">Herramienta</span></div>
-        <h3>Sistema de Asignación</h3>
-        <p>Asignador interactivo de casos con recomendaciones ponderadas por velocidad, reloj de SLA, pre-carga de casos y persistencia en localStorage/JSON.</p>
+        <div class="card-top"><span class="chip tool" data-i18n="chip_tool">Herramienta</span></div>
+        <h3 data-i18n="card_tool2_title">Sistema de Asignación</h3>
+        <p data-i18n="card_tool2_desc">Asignador interactivo de casos con recomendaciones ponderadas por velocidad, reloj de SLA, pre-carga de casos y persistencia en localStorage/JSON.</p>
         <div class="stack"><span>HTML</span><span>localStorage</span><span>JS</span></div>
-        <a class="card-link" href="Herramientas/AUTO-ASIGN.HMTL.html">Abrir herramienta</a>
+        <a class="card-link" data-i18n="cta_open_tool" href="Herramientas/AUTO-ASIGN.HMTL.html">Abrir herramienta</a>
       </div>
 
       <div class="card">
-        <div class="card-top"><span class="chip tool">Herramienta</span></div>
-        <h3>Bitácora de Errores</h3>
-        <p>Herramienta de registro y cuantificación de errores operativos: captura incidencias, las clasifica y estima su costo para priorizar mejoras de proceso.</p>
+        <div class="card-top"><span class="chip tool" data-i18n="chip_tool">Herramienta</span></div>
+        <h3 data-i18n="card_tool3_title">Bitácora de Errores</h3>
+        <p data-i18n="card_tool3_desc">Herramienta de registro y cuantificación de errores operativos: captura incidencias, las clasifica y estima su costo para priorizar mejoras de proceso.</p>
         <div class="stack"><span>HTML</span><span>JS</span></div>
-        <a class="card-link" href="Herramientas/HERRAMIENTA%20REGISTRO%20Y%20CUANTIFICACION%20DE%20ERRORES.html">Abrir herramienta</a>
+        <a class="card-link" data-i18n="cta_open_tool" href="Herramientas/HERRAMIENTA%20REGISTRO%20Y%20CUANTIFICACION%20DE%20ERRORES.html">Abrir herramienta</a>
       </div>
 
       <div class="card">
-        <div class="card-top"><span class="chip tool">Herramienta</span></div>
-        <h3>Validador de Información</h3>
-        <p>Herramienta de validación de datos que verifica consistencia y calidad de la información antes de procesarla, reduciendo errores aguas abajo.</p>
+        <div class="card-top"><span class="chip tool" data-i18n="chip_tool">Herramienta</span></div>
+        <h3 data-i18n="card_tool4_title">Validador de Información</h3>
+        <p data-i18n="card_tool4_desc">Herramienta de validación de datos que verifica consistencia y calidad de la información antes de procesarla, reduciendo errores aguas abajo.</p>
         <div class="stack"><span>HTML</span><span>JS</span></div>
-        <a class="card-link" href="Herramientas/VALIDADOR%20DE%20INFORMACION.html">Abrir herramienta</a>
+        <a class="card-link" data-i18n="cta_open_tool" href="Herramientas/VALIDADOR%20DE%20INFORMACION.html">Abrir herramienta</a>
       </div>
 
       <div class="card">
-        <div class="card-top"><span class="chip tool">Herramienta</span></div>
-        <h3>Generador de Informes</h3>
-        <p>Herramienta que automatiza la generación de informes operativos con formato consistente, ahorrando tiempo en reportes recurrentes.</p>
+        <div class="card-top"><span class="chip tool" data-i18n="chip_tool">Herramienta</span></div>
+        <h3 data-i18n="card_tool5_title">Generador de Informes</h3>
+        <p data-i18n="card_tool5_desc">Herramienta que automatiza la generación de informes operativos con formato consistente, ahorrando tiempo en reportes recurrentes.</p>
         <div class="stack"><span>HTML</span><span>JS</span></div>
-        <a class="card-link" href="Herramientas/GENERADOR%20DE%20INFORME.html">Abrir herramienta</a>
+        <a class="card-link" data-i18n="cta_open_tool" href="Herramientas/GENERADOR%20DE%20INFORME.html">Abrir herramienta</a>
       </div>
 
       <div class="card">
-        <div class="card-top"><span class="chip doc">Estudio AI</span></div>
-        <h3>Estudio de Informes y Presentaciones</h3>
-        <p>Plataforma que genera informes y presentaciones a partir de datos operativos, unificando formato y acelerando la producción de entregables.</p>
+        <div class="card-top"><span class="chip doc" data-i18n="chip_ai_studio">Estudio AI</span></div>
+        <h3 data-i18n="card_studio_title">Estudio de Informes y Presentaciones</h3>
+        <p data-i18n="card_studio_desc">Plataforma que genera informes y presentaciones a partir de datos operativos, unificando formato y acelerando la producción de entregables.</p>
         <div class="stack"><span>HTML</span><span>JS</span></div>
-        <a class="card-link" href="Herramientas/SPARK%20STUDIO%20-%20GENERADOR%20DE%20INFORMES%20Y%20PRESENTACIONES.html">Abrir herramienta</a>
+        <a class="card-link" data-i18n="cta_open_tool" href="Herramientas/SPARK%20STUDIO%20-%20GENERADOR%20DE%20INFORMES%20Y%20PRESENTACIONES.html">Abrir herramienta</a>
       </div>
 
       <div class="card">
-        <div class="card-top"><span class="chip tool">Personal</span></div>
-        <h3>MiTracker</h3>
-        <p>Tracker de hábitos personal: layout en bento grid, heatmap de 90 días, modo oscuro, persistencia en IndexedDB y backup por exportación/importación de JSON.</p>
+        <div class="card-top"><span class="chip tool" data-i18n="chip_personal">Personal</span></div>
+        <h3 data-i18n="card_tracker_title">MiTracker</h3>
+        <p data-i18n="card_tracker_desc">Tracker de hábitos personal: layout en bento grid, heatmap de 90 días, modo oscuro, persistencia en IndexedDB y backup por exportación/importación de JSON.</p>
         <div class="stack"><span>HTML</span><span>IndexedDB</span><span>Dark mode</span></div>
-        <a class="card-link" href="Herramientas/MiTracker_2.html">Abrir herramienta</a>
+        <a class="card-link" data-i18n="cta_open_tool" href="Herramientas/MiTracker_2.html">Abrir herramienta</a>
       </div>
 
       <div class="card">
-        <div class="card-top"><span class="chip tool">Personal</span></div>
-        <h3>Control de Gastos</h3>
-        <p>App personal para registrar y visualizar gastos, con persistencia de datos y resúmenes que ayudan a seguir las finanzas del día a día.</p>
+        <div class="card-top"><span class="chip tool" data-i18n="chip_personal">Personal</span></div>
+        <h3 data-i18n="card_expenses_title">Control de Gastos</h3>
+        <p data-i18n="card_expenses_desc">App personal para registrar y visualizar gastos, con persistencia de datos y resúmenes que ayudan a seguir las finanzas del día a día.</p>
         <div class="stack"><span>HTML</span><span>JSON</span><span>JS</span></div>
-        <a class="card-link" href="Herramientas/gastos.html">Abrir herramienta</a>
+        <a class="card-link" data-i18n="cta_open_tool" href="Herramientas/gastos.html">Abrir herramienta</a>
       </div>
 
       <div class="card">
-        <div class="card-top"><span class="chip doc">Productividad AI</span></div>
-        <h3>Documentos, presentaciones &amp; HU</h3>
-        <p>Uso AI para acelerar la creación de entregables: presentaciones, documentos formales, historias de usuario, manuales de proceso y comunicaciones internas con formato profesional.</p>
-        <div class="stack"><span>Presentaciones</span><span>Documentos</span><span>HU</span></div>
-        <a class="card-link disabled" href="#">Trabajo en curso</a>
+        <div class="card-top"><span class="chip doc" data-i18n="chip_ai_productivity">Productividad AI</span></div>
+        <h3 data-i18n="card_docs_title">Documentos, presentaciones &amp; HU</h3>
+        <p data-i18n="card_docs_desc">Uso AI para acelerar la creación de entregables: presentaciones, documentos formales, historias de usuario, manuales de proceso y comunicaciones internas con formato profesional.</p>
+        <div class="stack"><span data-i18n="stack_decks">Presentaciones</span><span data-i18n="stack_documents">Documentos</span><span data-i18n="stack_user_stories">HU</span></div>
+        <span class="card-link disabled" data-i18n="cta_wip">Trabajo en curso</span>
       </div>
 
       <div class="card">
-        <div class="card-top"><span class="chip imagen">Imágenes AI</span></div>
-        <h3>Creación de imágenes</h3>
-        <p>Genero imágenes con AI para apoyar comunicaciones, diseño de interfaces y material visual: ilustraciones, gráficos de apoyo y recursos a la medida de cada entregable.</p>
-        <div class="stack"><span>Generación AI</span><span>Diseño visual</span></div>
-        <a class="card-link disabled" href="#">Trabajo en curso</a>
+        <div class="card-top"><span class="chip imagen" data-i18n="chip_ai_images">Imágenes AI</span></div>
+        <h3 data-i18n="card_images_title">Creación de imágenes</h3>
+        <p data-i18n="card_images_desc">Genero imágenes con AI para apoyar comunicaciones, diseño de interfaces y material visual: ilustraciones, gráficos de apoyo y recursos a la medida de cada entregable.</p>
+        <div class="stack"><span data-i18n="stack_ai_generation">Generación AI</span><span data-i18n="stack_visual_design">Diseño visual</span></div>
+        <span class="card-link disabled" data-i18n="cta_wip">Trabajo en curso</span>
       </div>
 
     </div>
@@ -365,33 +514,35 @@
 
 <section id="systems">
   <div class="wrap">
-    <div class="section-label">04 — Sistemas</div>
-    <h2>Frameworks y agentes</h2>
-    <p class="section-intro">Más allá de archivos sueltos: sistemas de diseño y configuraciones de AI que dan consistencia y escala al resto del trabajo.</p>
+    <div class="section-head">
+      <div class="section-label" data-i18n="sec4_label">04 — Sistemas</div>
+      <h2 data-i18n="sec4_title">Frameworks y agentes</h2>
+      <p class="section-intro" data-i18n="sec4_intro">Más allá de archivos sueltos: sistemas de diseño y configuraciones de AI que dan consistencia y escala al resto del trabajo.</p>
+    </div>
     <div class="grid">
 
       <div class="card">
-        <div class="card-top"><span class="chip agent">Sistema</span></div>
-        <h3>Design System propio</h3>
-        <p>Sistema de diseño que unifica mis dashboards: tipografía, color y espaciado canónicos. Paleta por línea de negocio y tipografía consistente en pesos controlados para dar coherencia visual a todo el trabajo.</p>
+        <div class="card-top"><span class="chip agent" data-i18n="chip_system">Sistema</span></div>
+        <h3 data-i18n="card_design_title">Design System propio</h3>
+        <p data-i18n="card_design_desc">Sistema de diseño que unifica mis dashboards: tipografía, color y espaciado canónicos. Paleta por línea de negocio y tipografía consistente en pesos controlados para dar coherencia visual a todo el trabajo.</p>
         <div class="stack"><span>Design system</span><span>Markdown</span></div>
-        <a class="card-link disabled" href="#">Documentación interna</a>
+        <span class="card-link disabled" data-i18n="cta_internal_doc">Documentación interna</span>
       </div>
 
       <div class="card">
-        <div class="card-top"><span class="chip auto">Aprendiendo</span></div>
-        <h3>Automatización con n8n &amp; Make</h3>
-        <p>Estoy empezando a conectar mis herramientas y procesos con flujos de automatización. Explorando n8n y Make para encadenar tareas, mover datos entre sistemas y reducir trabajo manual recurrente.</p>
-        <div class="stack"><span>n8n</span><span>Make</span><span>Automatización</span></div>
-        <a class="card-link disabled" href="#">En exploración</a>
+        <div class="card-top"><span class="chip auto" data-i18n="chip_learning">Aprendiendo</span></div>
+        <h3 data-i18n="card_automation_title">Automatización con n8n &amp; Make</h3>
+        <p data-i18n="card_automation_desc">Estoy empezando a conectar mis herramientas y procesos con flujos de automatización. Explorando n8n y Make para encadenar tareas, mover datos entre sistemas y reducir trabajo manual recurrente.</p>
+        <div class="stack"><span>n8n</span><span>Make</span><span data-i18n="stack_automation">Automatización</span></div>
+        <span class="card-link disabled" data-i18n="cta_exploring">En exploración</span>
       </div>
 
       <div class="card">
-        <div class="card-top"><span class="chip agent">Agentes</span></div>
-        <h3>Agentes &amp; Claude Code</h3>
-        <p>Configuración de agentes a la medida (analista de datos local, ops-analyst, dev local), sistema de archivos CLAUDE.md, comandos slash y flujo Git/GitHub para el desarrollo de dashboards.</p>
-        <div class="stack"><span>Claude Code</span><span>Agentes</span><span>Git</span></div>
-        <a class="card-link disabled" href="#">Configuración interna</a>
+        <div class="card-top"><span class="chip agent" data-i18n="chip_agents">Agentes</span></div>
+        <h3 data-i18n="card_agents_title">Agentes &amp; Claude Code</h3>
+        <p data-i18n="card_agents_desc">Configuración de agentes a la medida (analista de datos local, ops-analyst, dev local), sistema de archivos CLAUDE.md, comandos slash y flujo Git/GitHub para el desarrollo de dashboards.</p>
+        <div class="stack"><span>Claude Code</span><span data-i18n="stack_agents">Agentes</span><span>Git</span></div>
+        <span class="card-link disabled" data-i18n="cta_internal_config">Configuración interna</span>
       </div>
 
     </div>
@@ -400,11 +551,20 @@
 
 <section id="about" style="background:#EDF1F6;">
   <div class="wrap">
-    <div class="section-label">05 — Sobre mí</div>
-    <h2>Quién está detrás</h2>
+    <div class="section-head">
+      <div class="section-label" data-i18n="sec5_label">05 — Sobre mí</div>
+      <h2 data-i18n="sec5_title">Quién está detrás</h2>
+    </div>
     <div class="about-box" style="margin-top:24px;">
-      <p>Trabajo en operaciones de seguros para una región de 9 países en LATAM. Mi trabajo combina análisis operativo riguroso —utilización, capacidad, SLA— con la construcción de las herramientas que hacen ese análisis posible.</p>
-      <p>Me gusta cerrar el ciclo completo: detectar el problema en los datos, diseñar la solución y desplegarla. Casi todo lo que ves aquí lo construí de punta a punta usando AI como copiloto de desarrollo.</p>
+      <div class="about-stats">
+        <div><strong>5+</strong><span data-i18n="about_stat_years">años de experiencia</span></div>
+        <div><strong>9</strong><span data-i18n="about_stat_countries">países gestionados</span></div>
+        <div><strong>USD 350K+</strong><span data-i18n="about_stat_budget">presupuesto gestionado</span></div>
+        <div><strong>MBA</strong><span data-i18n="about_stat_mba">+ Ingeniería de Sistemas</span></div>
+      </div>
+      <p data-i18n="about_p1">Project Manager e Ingeniero de Sistemas con MBA, especializado en transformación digital, automatización y optimización operativa en Latinoamérica. Más de 5 años liderando proyectos regionales en 9 países, alineando estrategia, operación y tecnología para convertir procesos complejos en resultados medibles.</p>
+      <p data-i18n="about_p2">Experiencia multisectorial en seguros, retail, tecnología, consumo y servicios financieros, liderando iniciativas de alto impacto enfocadas en eficiencia, escalabilidad y mejora continua. Combino marcos Agile, automatización de procesos y analítica con una evolución activa hacia AI Automation, apoyado en herramientas como JIRA, SQL, Kissflow, MS Project y reporting ejecutivo orientado a KPIs.</p>
+      <p data-i18n="about_p3">Gestiono alcance, tiempo, costo, calidad, riesgos, stakeholders y presupuestos CAPEX/OPEX con foco en ejecución: automatizaciones regionales, indicadores para equipos directivos y presupuestos superiores a USD 350.000. Abierto a conectar con profesionales y organizaciones que impulsen la transformación digital y la excelencia operativa con impacto real en el negocio.</p>
     </div>
   </div>
 </section>
@@ -412,13 +572,327 @@
 <footer>
   <div class="wrap">
     <div class="footer-links">
+      <a href="https://www.linkedin.com/in/ingcarloscorrea/" target="_blank" rel="noopener">LinkedIn</a>
       <a href="https://github.com/carloscorrea747-ops">GitHub</a>
-      <a href="#dashboards">Proyectos</a>
-      <a href="#about">Sobre mí</a>
+      <a href="#dashboards" data-i18n="footer_projects">Proyectos</a>
+      <a href="#about" data-i18n="footer_about">Sobre mí</a>
     </div>
-    <div>© 2026 Carlos Correa · Construido con AI, desplegado en GitHub Pages</div>
+    <div data-i18n="footer_copyright">© 2026 Carlos Correa · Construido con AI, desplegado en GitHub Pages</div>
   </div>
 </footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var translations = {
+    es: {
+      page_title: "Carlos Correa — Portafolio AI & Operaciones",
+      meta_description: "Portafolio de Carlos Correa, Project Manager e Ingeniero de Sistemas con MBA: dashboards, automatización y herramientas con AI para operaciones en LATAM.",
+      brand_aria: "Perfil de LinkedIn de Carlos Correa",
+      lang_group_aria: "Selector de idioma",
+      hero_tag: "Operaciones · Datos · <span>Herramientas con AI</span>",
+      hero_sub: "Construyo dashboards operativos, agentes y herramientas internas que convierten datos dispersos en decisiones. Trabajo en operaciones de seguros para 9 países de LATAM, donde diseño y despliego mis propias soluciones.",
+      stat_countries: "países LATAM",
+      stat_live_projects: "proyectos en vivo",
+      stat_own_tools: "herramientas propias",
+
+      sec1_label: "01 — Dashboards",
+      sec1_title: "Inteligencia operativa",
+      sec1_intro: "Aplicaciones de una sola página, offline-first, que viven en entornos corporativos. Arquitectura en vanilla JS con Chart.js, SheetJS, Web Workers e IndexedDB.",
+      card_dash1_title: "Dashboard de Procesamiento",
+      card_dash1_desc: "Dashboard que mide el procesamiento de casos de seguros: tiempos de manejo, ciclo, cumplimiento de SLA y productividad por analista, status y país. Incluye lógica dual de SLA y comparativas mes a mes.",
+      card_dash2_title: "Dashboard de Producción y Calidad",
+      card_dash2_desc: "Dashboard paralelo con la misma arquitectura, enfocado en producción y calidad. Donut charts, barras horizontales, tarjetas de SLA y tablas de sub-proceso sobre un modelo de datos multi-tabla.",
+      cta_view_dashboard: "Ver dashboard",
+
+      sec2_label: "02 — Vibe coding",
+      sec2_title: "Proyectos para entrevista técnica",
+      sec2_intro: "Dos proyectos en vivo construidos con vibe coding para una entrevista técnica, apoyándome en Qwen, Claude Code y Lovable. Una landing de producto y el dashboard que le daría seguimiento.",
+      chip_live: "En vivo",
+      card_landing_title: "Landing — Microseguro de movilidad",
+      card_landing_desc: "Landing page de un microseguro digital: hero, coberturas, planes modulares con tabla comparativa, cotizador interactivo que calcula precio estimado por perfil y formulario de captura de leads.",
+      cta_view_landing: "Ver landing",
+      card_vibedash_title: "Dashboard — Seguimiento de la landing",
+      card_vibedash_desc: "Dashboard de analytics (con datos dummy) que muestra cómo se mediría el desempeño de la landing: funnel de conversión, leads por plan y ciudad, segmentos demográficos, score de riesgo y proyección de prima.",
+
+      sec3_label: "03 — Herramientas",
+      sec3_title: "Apps y utilidades",
+      sec3_intro: "Herramientas standalone en HTML que resuelven problemas concretos del día a día operativo y personal.",
+      chip_tool: "Herramienta",
+      card_tool1_title: "Generador de Bases por País",
+      card_tool1_desc: "App HTML que divide datos de Excel por país de LATAM automáticamente, eliminando trabajo manual repetitivo en la generación de bases operativas.",
+      card_tool2_title: "Sistema de Asignación",
+      card_tool2_desc: "Asignador interactivo de casos con recomendaciones ponderadas por velocidad, reloj de SLA, pre-carga de casos y persistencia en localStorage/JSON.",
+      card_tool3_title: "Bitácora de Errores",
+      card_tool3_desc: "Herramienta de registro y cuantificación de errores operativos: captura incidencias, las clasifica y estima su costo para priorizar mejoras de proceso.",
+      card_tool4_title: "Validador de Información",
+      card_tool4_desc: "Herramienta de validación de datos que verifica consistencia y calidad de la información antes de procesarla, reduciendo errores aguas abajo.",
+      card_tool5_title: "Generador de Informes",
+      card_tool5_desc: "Herramienta que automatiza la generación de informes operativos con formato consistente, ahorrando tiempo en reportes recurrentes.",
+      chip_ai_studio: "Estudio AI",
+      card_studio_title: "Estudio de Informes y Presentaciones",
+      card_studio_desc: "Plataforma que genera informes y presentaciones a partir de datos operativos, unificando formato y acelerando la producción de entregables.",
+      chip_personal: "Personal",
+      card_tracker_title: "MiTracker",
+      card_tracker_desc: "Tracker de hábitos personal: layout en bento grid, heatmap de 90 días, modo oscuro, persistencia en IndexedDB y backup por exportación/importación de JSON.",
+      card_expenses_title: "Control de Gastos",
+      card_expenses_desc: "App personal para registrar y visualizar gastos, con persistencia de datos y resúmenes que ayudan a seguir las finanzas del día a día.",
+      chip_ai_productivity: "Productividad AI",
+      card_docs_title: "Documentos, presentaciones & HU",
+      card_docs_desc: "Uso AI para acelerar la creación de entregables: presentaciones, documentos formales, historias de usuario, manuales de proceso y comunicaciones internas con formato profesional.",
+      stack_decks: "Presentaciones",
+      stack_documents: "Documentos",
+      stack_user_stories: "HU",
+      chip_ai_images: "Imágenes AI",
+      card_images_title: "Creación de imágenes",
+      card_images_desc: "Genero imágenes con AI para apoyar comunicaciones, diseño de interfaces y material visual: ilustraciones, gráficos de apoyo y recursos a la medida de cada entregable.",
+      stack_ai_generation: "Generación AI",
+      stack_visual_design: "Diseño visual",
+      cta_open_tool: "Abrir herramienta",
+      cta_wip: "Trabajo en curso",
+
+      sec4_label: "04 — Sistemas",
+      sec4_title: "Frameworks y agentes",
+      sec4_intro: "Más allá de archivos sueltos: sistemas de diseño y configuraciones de AI que dan consistencia y escala al resto del trabajo.",
+      chip_system: "Sistema",
+      card_design_title: "Design System propio",
+      card_design_desc: "Sistema de diseño que unifica mis dashboards: tipografía, color y espaciado canónicos. Paleta por línea de negocio y tipografía consistente en pesos controlados para dar coherencia visual a todo el trabajo.",
+      cta_internal_doc: "Documentación interna",
+      chip_learning: "Aprendiendo",
+      card_automation_title: "Automatización con n8n & Make",
+      card_automation_desc: "Estoy empezando a conectar mis herramientas y procesos con flujos de automatización. Explorando n8n y Make para encadenar tareas, mover datos entre sistemas y reducir trabajo manual recurrente.",
+      stack_automation: "Automatización",
+      cta_exploring: "En exploración",
+      chip_agents: "Agentes",
+      card_agents_title: "Agentes & Claude Code",
+      card_agents_desc: "Configuración de agentes a la medida (analista de datos local, ops-analyst, dev local), sistema de archivos CLAUDE.md, comandos slash y flujo Git/GitHub para el desarrollo de dashboards.",
+      stack_agents: "Agentes",
+      cta_internal_config: "Configuración interna",
+
+      sec5_label: "05 — Sobre mí",
+      sec5_title: "Quién está detrás",
+      about_stat_years: "años de experiencia",
+      about_stat_countries: "países gestionados",
+      about_stat_budget: "presupuesto gestionado",
+      about_stat_mba: "+ Ingeniería de Sistemas",
+      about_p1: "Project Manager e Ingeniero de Sistemas con MBA, especializado en transformación digital, automatización y optimización operativa en Latinoamérica. Más de 5 años liderando proyectos regionales en 9 países, alineando estrategia, operación y tecnología para convertir procesos complejos en resultados medibles.",
+      about_p2: "Experiencia multisectorial en seguros, retail, tecnología, consumo y servicios financieros, liderando iniciativas de alto impacto enfocadas en eficiencia, escalabilidad y mejora continua. Combino marcos Agile, automatización de procesos y analítica con una evolución activa hacia AI Automation, apoyado en herramientas como JIRA, SQL, Kissflow, MS Project y reporting ejecutivo orientado a KPIs.",
+      about_p3: "Gestiono alcance, tiempo, costo, calidad, riesgos, stakeholders y presupuestos CAPEX/OPEX con foco en ejecución: automatizaciones regionales, indicadores para equipos directivos y presupuestos superiores a USD 350.000. Abierto a conectar con profesionales y organizaciones que impulsen la transformación digital y la excelencia operativa con impacto real en el negocio.",
+
+      footer_projects: "Proyectos",
+      footer_about: "Sobre mí",
+      footer_copyright: "© 2026 Carlos Correa · Construido con AI, desplegado en GitHub Pages"
+    },
+    en: {
+      page_title: "Carlos Correa — AI & Operations Portfolio",
+      meta_description: "Carlos Correa's portfolio — Project Manager & Systems Engineer with an MBA: dashboards, automation, and AI-powered tools for operations across Latin America.",
+      brand_aria: "Carlos Correa's LinkedIn profile",
+      lang_group_aria: "Language selector",
+      hero_tag: "Operations · Data · <span>AI-powered tools</span>",
+      hero_sub: "I build operational dashboards, agents, and internal tools that turn scattered data into decisions. I work in insurance operations across 9 LATAM countries, where I design and ship my own solutions.",
+      stat_countries: "LATAM countries",
+      stat_live_projects: "live projects",
+      stat_own_tools: "custom tools",
+
+      sec1_label: "01 — Dashboards",
+      sec1_title: "Operational intelligence",
+      sec1_intro: "Single-page, offline-first applications built for corporate environments. Vanilla JS architecture with Chart.js, SheetJS, Web Workers, and IndexedDB.",
+      card_dash1_title: "Case Processing Dashboard",
+      card_dash1_desc: "A dashboard that tracks insurance case processing: handling time, cycle time, SLA compliance, and productivity by analyst, status, and country. Includes dual SLA logic and month-over-month comparisons.",
+      card_dash2_title: "Production & Quality Dashboard",
+      card_dash2_desc: "A parallel dashboard on the same architecture, focused on production and quality. Donut charts, horizontal bars, SLA cards, and sub-process tables on a multi-table data model.",
+      cta_view_dashboard: "View dashboard",
+
+      sec2_label: "02 — Vibe coding",
+      sec2_title: "Technical interview projects",
+      sec2_intro: "Two live projects built with vibe coding for a technical interview, using Qwen, Claude Code, and Lovable. A product landing page and the dashboard that would track it.",
+      chip_live: "Live",
+      card_landing_title: "Landing page — Mobility micro-insurance",
+      card_landing_desc: "Landing page for a digital micro-insurance product: hero, coverage details, modular plans with a comparison table, an interactive quote calculator by profile, and a lead-capture form.",
+      cta_view_landing: "View landing page",
+      card_vibedash_title: "Dashboard — Landing performance",
+      card_vibedash_desc: "An analytics dashboard (with dummy data) showing how the landing page's performance would be measured: conversion funnel, leads by plan and city, demographic segments, risk score, and premium projection.",
+
+      sec3_label: "03 — Tools",
+      sec3_title: "Apps & utilities",
+      sec3_intro: "Standalone HTML tools that solve concrete problems from day-to-day operations and personal life.",
+      chip_tool: "Tool",
+      card_tool1_title: "Country Database Generator",
+      card_tool1_desc: "An HTML app that automatically splits Excel data by LATAM country, removing repetitive manual work from building operational databases.",
+      card_tool2_title: "Case Assignment System",
+      card_tool2_desc: "An interactive case assignment tool with weighted recommendations based on speed, an SLA clock, case pre-loading, and localStorage/JSON persistence.",
+      card_tool3_title: "Error Log & Costing Tool",
+      card_tool3_desc: "A tool for logging and quantifying operational errors: it captures incidents, classifies them, and estimates their cost to prioritize process improvements.",
+      card_tool4_title: "Data Validator",
+      card_tool4_desc: "A data validation tool that checks consistency and quality before processing, reducing downstream errors.",
+      card_tool5_title: "Report Generator",
+      card_tool5_desc: "A tool that automates operational report generation with a consistent format, saving time on recurring reports.",
+      chip_ai_studio: "AI Studio",
+      card_studio_title: "Reports & Presentations Studio",
+      card_studio_desc: "A platform that generates reports and presentations from operational data, standardizing format and speeding up delivery.",
+      chip_personal: "Personal",
+      card_tracker_title: "MiTracker",
+      card_tracker_desc: "A personal habit tracker: bento-grid layout, a 90-day heatmap, dark mode, IndexedDB persistence, and JSON export/import backup.",
+      card_expenses_title: "Expense Tracker",
+      card_expenses_desc: "A personal app for logging and visualizing expenses, with data persistence and summaries that help track day-to-day finances.",
+      chip_ai_productivity: "AI Productivity",
+      card_docs_title: "Documents, decks & user stories",
+      card_docs_desc: "I use AI to speed up deliverables: presentations, formal documents, user stories, process manuals, and internal communications with a professional format.",
+      stack_decks: "Decks",
+      stack_documents: "Documents",
+      stack_user_stories: "User stories",
+      chip_ai_images: "AI Images",
+      card_images_title: "Image creation",
+      card_images_desc: "I generate AI images to support communications, interface design, and visual material: illustrations, supporting graphics, and assets tailored to each deliverable.",
+      stack_ai_generation: "AI generation",
+      stack_visual_design: "Visual design",
+      cta_open_tool: "Open tool",
+      cta_wip: "Work in progress",
+
+      sec4_label: "04 — Systems",
+      sec4_title: "Frameworks & agents",
+      sec4_intro: "Beyond loose files: design systems and AI configurations that bring consistency and scale to the rest of the work.",
+      chip_system: "System",
+      card_design_title: "Custom design system",
+      card_design_desc: "A design system that unifies my dashboards: canonical typography, color, and spacing. A palette per business line and consistent typography with controlled weights, giving all the work visual coherence.",
+      cta_internal_doc: "Internal documentation",
+      chip_learning: "Learning",
+      card_automation_title: "Automation with n8n & Make",
+      card_automation_desc: "I am starting to connect my tools and processes with automation flows. Exploring n8n and Make to chain tasks, move data between systems, and cut down recurring manual work.",
+      stack_automation: "Automation",
+      cta_exploring: "Exploring",
+      chip_agents: "Agents",
+      card_agents_title: "Agents & Claude Code",
+      card_agents_desc: "Custom agent configurations (local data analyst, ops-analyst, local dev), a CLAUDE.md file system, slash commands, and a Git/GitHub workflow for dashboard development.",
+      stack_agents: "Agents",
+      cta_internal_config: "Internal configuration",
+
+      sec5_label: "05 — About",
+      sec5_title: "The person behind the work",
+      about_stat_years: "years of experience",
+      about_stat_countries: "countries managed",
+      about_stat_budget: "budget managed",
+      about_stat_mba: "+ Systems Engineering",
+      about_p1: "Project Manager & Systems Engineer with an MBA, specialized in digital transformation, automation, and operational optimization across Latin America. 5+ years leading regional projects in 9 countries, aligning strategy, operations, and technology to turn complex processes into measurable results.",
+      about_p2: "Multi-sector experience across insurance, retail, technology, consumer goods, and financial services, leading high-impact initiatives focused on efficiency, scalability, and continuous improvement. I combine Agile frameworks, process automation, and analytics with an active shift toward AI Automation, using tools like JIRA, SQL, Kissflow, MS Project, and KPI-driven executive reporting.",
+      about_p3: "I manage scope, time, cost, quality, risk, stakeholders, and CAPEX/OPEX budgets with a strong focus on execution: regional automation efforts, indicators for executive teams, and budgets exceeding USD 350,000. Open to connecting with professionals and organizations driving digital transformation and operational excellence with real business impact.",
+
+      footer_projects: "Projects",
+      footer_about: "About me",
+      footer_copyright: "© 2026 Carlos Correa · Built with AI, deployed on GitHub Pages"
+    }
+  };
+
+  var STORAGE_KEY = "cc_portfolio_lang";
+
+  function detectInitialLang() {
+    var stored = null;
+    try { stored = localStorage.getItem(STORAGE_KEY); } catch (e) { stored = null; }
+    if (stored === "es" || stored === "en") return stored;
+    var nav = (navigator.language || navigator.userLanguage || "es").toLowerCase();
+    return nav.indexOf("en") === 0 ? "en" : "es";
+  }
+
+  function applyLang(lang) {
+    var dict = translations[lang] ? lang : "es";
+    dict = translations[dict];
+
+    document.documentElement.lang = lang;
+    document.title = dict.page_title;
+
+    var metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute("content", dict.meta_description);
+
+    var i = 0, nodes;
+
+    nodes = document.querySelectorAll("[data-i18n]");
+    for (i = 0; i < nodes.length; i++) {
+      var key = nodes[i].getAttribute("data-i18n");
+      if (dict[key] !== undefined) nodes[i].textContent = dict[key];
+    }
+
+    nodes = document.querySelectorAll("[data-i18n-html]");
+    for (i = 0; i < nodes.length; i++) {
+      var hkey = nodes[i].getAttribute("data-i18n-html");
+      if (dict[hkey] !== undefined) nodes[i].innerHTML = dict[hkey];
+    }
+
+    nodes = document.querySelectorAll("[data-i18n-aria]");
+    for (i = 0; i < nodes.length; i++) {
+      var akey = nodes[i].getAttribute("data-i18n-aria");
+      if (dict[akey] !== undefined) nodes[i].setAttribute("aria-label", dict[akey]);
+    }
+
+    var buttons = document.querySelectorAll(".lang-btn");
+    for (i = 0; i < buttons.length; i++) {
+      buttons[i].setAttribute("aria-pressed", String(buttons[i].getAttribute("data-lang") === lang));
+    }
+
+    try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
+  }
+
+  function initLangToggle() {
+    var buttons = document.querySelectorAll(".lang-btn");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener("click", function () {
+        applyLang(this.getAttribute("data-lang"));
+      });
+    }
+  }
+
+  function initScrollReveal() {
+    var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) return;
+
+    var targets = document.querySelectorAll(".section-head, .card, .about-box");
+
+    document.querySelectorAll(".grid").forEach(function (grid) {
+      Array.prototype.forEach.call(grid.children, function (card, i) {
+        card.style.transitionDelay = (Math.min(i, 4) * 60) + "ms";
+      });
+    });
+
+    if (!("IntersectionObserver" in window)) {
+      targets.forEach(function (el) { el.classList.add("is-visible"); });
+      return;
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+
+    targets.forEach(function (el) {
+      el.classList.add("will-reveal");
+      observer.observe(el);
+    });
+  }
+
+  function initHeroFallback() {
+    // CSS animation clocks can stay frozen on a document that never becomes
+    // visible (e.g. a background-tab open or a headless link-preview render).
+    // This guarantees the hero content still ends up visible either way.
+    var heroEls = document.querySelectorAll(".top-bar, .hero-tag, h1, .hero-sub, .hero-meta");
+    window.setTimeout(function () {
+      heroEls.forEach(function (el) {
+        el.style.animation = "none";
+        el.style.opacity = "1";
+        el.style.transform = "none";
+      });
+    }, 1200);
+  }
+
+  applyLang(detectInitialLang());
+  initLangToggle();
+  initScrollReveal();
+  initHeroFallback();
+})();
+</script>
 
 </body>
 </html>
