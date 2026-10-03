@@ -86,7 +86,10 @@
     transition:border-color .18s, color .18s;
   }
   .rail-brand:hover { border-color:#fff; color:#fff; }
-  .rail-nav { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:30px; position:relative; margin:20px 0; }
+  /* min-height/overflow are insurance only: five vertical labels fit with room
+     to spare at normal heights, but a very short window would otherwise clip them */
+  .rail-nav { flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:30px; position:relative; margin:20px 0; overflow-y:auto; scrollbar-width:none; }
+  .rail-nav::-webkit-scrollbar { display:none; }
   .rail-nav::before { content:""; position:absolute; top:-6px; bottom:-6px; left:50%; width:1px; background:rgba(255,255,255,0.1); }
   .rail-item { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:6px; text-decoration:none; }
   .rail-dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.28); transition:all .2s ease; }
@@ -195,6 +198,18 @@
   /* tone-a = brand green (landing) · tone-b = portfolio navy (dashboard) */
   .live-visual.tone-a { background:linear-gradient(150deg, #00573F, #002E20 78%); }
   .live-visual.tone-b { background:linear-gradient(150deg, #1B4F7E, #0A1F35 78%); }
+  .live-visual.tone-c { background:linear-gradient(150deg, #8A5A12, #2A1A04 78%); }
+
+  /* Spec callouts: carry the substance in panels that have no live preview
+     (this app sits behind auth, so it cannot be embedded like the others). */
+  .live-visual.has-specs { flex-direction:column; align-items:flex-start; }
+  .live-specs { position:relative; z-index:2; display:flex; flex-direction:column; gap:9px; margin-top:auto; }
+  .live-specs span {
+    font-family:var(--font-mono); font-size:11.5px; letter-spacing:.03em; color:rgba(255,255,255,.92);
+    background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.16); padding:6px 12px; border-radius:8px;
+    backdrop-filter:blur(4px); align-self:flex-start;
+  }
+  .live-note { font-family:var(--font-mono); font-size:11.5px; color:var(--text-muted); margin-top:12px; }
   .live-visual-index { font-family:var(--font-mono); font-size:13px; color:rgba(255,255,255,.72); letter-spacing:.08em; }
   .live-tag, .live-visual-index { position:relative; z-index:2; }
 
@@ -325,7 +340,8 @@
   <a class="rail-brand" href="https://www.linkedin.com/in/ingcarloscorrea/" target="_blank" rel="noopener" data-i18n-aria="brand_aria" aria-label="Perfil de LinkedIn de Carlos Correa">CC</a>
   <div class="rail-nav">
     <a class="rail-item active" href="#top"><span class="rail-dot"></span><span data-i18n="nav_home">INICIO</span></a>
-    <a class="rail-item" href="#live"><span class="rail-dot"></span><span data-i18n="nav_live">EN VIVO</span></a>
+    <a class="rail-item" href="#product"><span class="rail-dot"></span><span data-i18n="nav_product">PRODUCTO</span></a>
+    <a class="rail-item" href="#live"><span class="rail-dot"></span><span data-i18n="nav_live">ENTREVISTA</span></a>
     <a class="rail-item" href="#more"><span class="rail-dot"></span><span data-i18n="nav_more">MÁS TRABAJO</span></a>
     <a class="rail-item" href="#about"><span class="rail-dot"></span><span data-i18n="nav_about">SOBRE MÍ</span></a>
   </div>
@@ -360,9 +376,36 @@
     </div>
   </header>
 
-  <section class="section" id="live">
+  <section class="section" id="product">
     <div class="section-head">
-      <div class="section-label" data-i18n="live_label">Trabajo en vivo</div>
+      <div class="section-label" data-i18n="product_label">Producto en producción</div>
+      <h2 data-i18n="product_title">Una app de finanzas con asistente de AI</h2>
+      <p data-i18n="product_intro">No es un ejercicio: tiene usuarios, autenticación, cupo de uso y política de datos bajo la Ley 1581. Es donde mejor se ve cómo pienso un producto de punta a punta.</p>
+    </div>
+
+    <div class="live-card">
+      <div class="live-visual tone-c has-specs">
+        <span class="live-tag"><span class="live-dot"></span><span data-i18n="chip_production">En producción</span></span>
+        <div class="live-specs">
+          <span data-i18n="spec_ai">Asistente AI · Gemini API</span>
+          <span data-i18n="spec_ocr">OCR y PDF en el dispositivo</span>
+          <span data-i18n="spec_db">Supabase · datos aislados por usuario</span>
+        </div>
+      </div>
+      <div class="live-info">
+        <div class="section-label" style="margin:0;" data-i18n="finapp_kicker">Finanzas personales</div>
+        <h3 data-i18n="finapp_title">Mis Finanzas Personales</h3>
+        <p data-i18n="finapp_desc">Registra saldo, sobres, gastos, tarjetas y préstamos. Lee los movimientos desde notificaciones, extractos PDF y pantallazos —procesados dentro del navegador, sin subir el extracto a ningún servidor— y responde preguntas sobre los gastos: la app calcula las cifras y Gemini solo redacta la respuesta.</p>
+        <div class="stack"><span>Lovable</span><span>Supabase</span><span>Gemini API</span><span>Tesseract.js</span><span>pdf.js</span></div>
+        <a class="live-cta" href="https://miappfinpersonal.lovable.app" target="_blank" rel="noopener" data-i18n="finapp_cta">Abrir la app</a>
+        <div class="live-note" data-i18n="finapp_note">Requiere crear una cuenta gratuita</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="live" style="padding-top:0;">
+    <div class="section-head">
+      <div class="section-label" data-i18n="live_label">Prueba técnica</div>
       <h2 data-i18n="live_title">Dos proyectos, de punta a punta</h2>
       <p data-i18n="live_intro">Construidos con vibe coding para una entrevista técnica — una landing de producto y el dashboard que le daría seguimiento. Ambos desplegados y funcionando hoy.</p>
     </div>
@@ -407,7 +450,7 @@
       <summary>
         <div class="more-work-title">
           <strong data-i18n="more_title">Ver el resto del trabajo</strong>
-          <span data-i18n="more_sub">15 proyectos — dashboards operativos, herramientas internas y sistemas de automatización</span>
+          <span data-i18n="more_sub">14 proyectos — dashboards operativos, herramientas internas y sistemas de automatización</span>
         </div>
         <span class="more-work-chevron" aria-hidden="true">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
@@ -486,13 +529,6 @@
               <p data-i18n="tracker_desc">Tracker de hábitos: layout en bento grid, heatmap de 90 días, modo oscuro, persistencia en IndexedDB y backup en JSON.</p>
               <div class="stack small"><span>HTML</span><span>IndexedDB</span><span>Dark mode</span></div>
               <a class="b-link" href="Herramientas/MiTracker_2.html" data-i18n="cta_open_tool">Abrir herramienta</a>
-            </div>
-            <div class="c-card">
-              <span class="c-chip" data-i18n="chip_personal">Personal</span>
-              <h4 data-i18n="expenses_title">Control de Gastos</h4>
-              <p data-i18n="expenses_desc">App personal para registrar y visualizar gastos, con persistencia de datos y resúmenes de las finanzas del día a día.</p>
-              <div class="stack small"><span>HTML</span><span>JSON</span><span>JS</span></div>
-              <a class="b-link" href="Herramientas/gastos.html" data-i18n="cta_open_tool">Abrir herramienta</a>
             </div>
             <div class="c-card">
               <span class="c-chip tone-casualty" data-i18n="chip_ai_productivity">Productividad AI</span>
@@ -589,7 +625,7 @@
       brand_aria: "Perfil de LinkedIn de Carlos Correa",
       theme_aria: "Cambiar tema",
       lang_group_aria: "Selector de idioma",
-      nav_home: "INICIO", nav_live: "EN VIVO", nav_more: "MÁS TRABAJO", nav_about: "SOBRE MÍ",
+      nav_home: "INICIO", nav_product: "PRODUCTO", nav_live: "ENTREVISTA", nav_more: "MÁS TRABAJO", nav_about: "SOBRE MÍ",
 
       hero_tag: "Operaciones · Datos · <em>Herramientas con AI</em>",
       hero_role: "Project Manager · Ingeniero de Sistemas · MBA",
@@ -598,7 +634,20 @@
       stat_years: "años liderando proyectos",
       stat_budget: "USD en presupuesto gestionado",
 
-      live_label: "Trabajo en vivo",
+      product_label: "Producto en producción",
+      product_title: "Una app de finanzas con asistente de AI",
+      product_intro: "No es un ejercicio: tiene usuarios, autenticación, cupo de uso y política de datos bajo la Ley 1581. Es donde mejor se ve cómo pienso un producto de punta a punta.",
+      chip_production: "En producción",
+      spec_ai: "Asistente AI · Gemini API",
+      spec_ocr: "OCR y PDF en el dispositivo",
+      spec_db: "Supabase · datos aislados por usuario",
+      finapp_kicker: "Finanzas personales",
+      finapp_title: "Mis Finanzas Personales",
+      finapp_desc: "Registra saldo, sobres, gastos, tarjetas y préstamos. Lee los movimientos desde notificaciones, extractos PDF y pantallazos —procesados dentro del navegador, sin subir el extracto a ningún servidor— y responde preguntas sobre los gastos: la app calcula las cifras y Gemini solo redacta la respuesta.",
+      finapp_cta: "Abrir la app",
+      finapp_note: "Requiere crear una cuenta gratuita",
+
+      live_label: "Prueba técnica",
       live_title: "Dos proyectos, de punta a punta",
       live_intro: "Construidos con vibe coding para una entrevista técnica — una landing de producto y el dashboard que le daría seguimiento. Ambos desplegados y funcionando hoy.",
       chip_live: "En vivo",
@@ -612,7 +661,7 @@
       live2_cta: "Ver dashboard en vivo",
 
       more_title: "Ver el resto del trabajo",
-      more_sub: "15 proyectos — dashboards operativos, herramientas internas y sistemas de automatización",
+      more_sub: "14 proyectos — dashboards operativos, herramientas internas y sistemas de automatización",
       group_dashboards: "Dashboards operativos",
       group_tools: "Herramientas",
       group_systems: "Sistemas y frameworks",
@@ -639,8 +688,6 @@
       studio_desc: "Genera informes y presentaciones a partir de datos operativos, unificando formato y acelerando la producción de entregables.",
       tracker_title: "MiTracker",
       tracker_desc: "Tracker de hábitos: layout en bento grid, heatmap de 90 días, modo oscuro, persistencia en IndexedDB y backup en JSON.",
-      expenses_title: "Control de Gastos",
-      expenses_desc: "App personal para registrar y visualizar gastos, con persistencia de datos y resúmenes de las finanzas del día a día.",
       docs_title: "Documentos, presentaciones & HU",
       docs_desc: "Uso AI para acelerar entregables: presentaciones, documentos formales, historias de usuario, manuales de proceso y comunicaciones internas.",
       images_title: "Creación de imágenes",
@@ -680,7 +727,7 @@
       brand_aria: "Carlos Correa's LinkedIn profile",
       theme_aria: "Switch theme",
       lang_group_aria: "Language selector",
-      nav_home: "HOME", nav_live: "LIVE", nav_more: "MORE WORK", nav_about: "ABOUT",
+      nav_home: "HOME", nav_product: "PRODUCT", nav_live: "INTERVIEW", nav_more: "MORE WORK", nav_about: "ABOUT",
 
       hero_tag: "Operations · Data · <em>AI-powered tools</em>",
       hero_role: "Project Manager · Systems Engineer · MBA",
@@ -689,7 +736,20 @@
       stat_years: "years leading projects",
       stat_budget: "USD in managed budget",
 
-      live_label: "Live work",
+      product_label: "Shipped product",
+      product_title: "A personal finance app with an AI assistant",
+      product_intro: "Not an exercise: it has users, authentication, usage quotas, and a data policy under Colombian data-protection law. It is where you can best see how I think a product through end to end.",
+      chip_production: "In production",
+      spec_ai: "AI assistant · Gemini API",
+      spec_ocr: "On-device OCR and PDF parsing",
+      spec_db: "Supabase · per-user data isolation",
+      finapp_kicker: "Personal finance",
+      finapp_title: "Mis Finanzas Personales",
+      finapp_desc: "Tracks balance, envelopes, expenses, cards, and loans. It reads transactions from bank notifications, PDF statements, and screenshots — all parsed inside the browser, with no statement ever uploaded to a server — and answers questions about spending: the app computes the figures and Gemini only writes the answer.",
+      finapp_cta: "Open the app",
+      finapp_note: "Requires a free account",
+
+      live_label: "Technical interview",
       live_title: "Two projects, end to end",
       live_intro: "Built with vibe coding for a technical interview — a product landing page and the dashboard that would track it. Both deployed and running today.",
       chip_live: "Live",
@@ -703,7 +763,7 @@
       live2_cta: "View live dashboard",
 
       more_title: "See the rest of the work",
-      more_sub: "15 projects — operational dashboards, internal tools, and automation systems",
+      more_sub: "14 projects — operational dashboards, internal tools, and automation systems",
       group_dashboards: "Operational dashboards",
       group_tools: "Tools",
       group_systems: "Systems & frameworks",
@@ -730,8 +790,6 @@
       studio_desc: "Generates reports and presentations from operational data, standardizing format and speeding up delivery.",
       tracker_title: "MiTracker",
       tracker_desc: "Habit tracker: bento-grid layout, 90-day heatmap, dark mode, IndexedDB persistence, and JSON backup.",
-      expenses_title: "Expense Tracker",
-      expenses_desc: "Personal app for logging and visualizing expenses, with data persistence and day-to-day finance summaries.",
       docs_title: "Documents, decks & user stories",
       docs_desc: "I use AI to speed up deliverables: presentations, formal documents, user stories, process manuals, and internal communications.",
       images_title: "Image creation",
