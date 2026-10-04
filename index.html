@@ -200,16 +200,18 @@
   .live-visual.tone-b { background:linear-gradient(150deg, #1B4F7E, #0A1F35 78%); }
   .live-visual.tone-c { background:linear-gradient(150deg, #8A5A12, #2A1A04 78%); }
 
-  /* Spec callouts: carry the substance in panels that have no live preview
-     (this app sits behind auth, so it cannot be embedded like the others). */
-  .live-visual.has-specs { flex-direction:column; align-items:flex-start; }
-  .live-specs { position:relative; z-index:2; display:flex; flex-direction:column; gap:9px; margin-top:auto; }
-  .live-specs span {
-    font-family:var(--font-mono); font-size:11.5px; letter-spacing:.03em; color:rgba(255,255,255,.92);
-    background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.16); padding:6px 12px; border-radius:8px;
-    backdrop-filter:blur(4px); align-self:flex-start;
-  }
+  /* Real screenshots: this app runs behind auth so it cannot be embedded live
+     like the other two. The gradient stays behind as the loading/failure state. */
+  .live-shot { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:top left; }
   .live-note { font-family:var(--font-mono); font-size:11.5px; color:var(--text-muted); margin-top:12px; }
+
+  .shots { position:relative; z-index:1; display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:24px; }
+  .shots figure { margin:0; }
+  .shots img {
+    display:block; width:100%; aspect-ratio:16/10; object-fit:cover; object-position:top left;
+    border-radius:12px; border:1px solid var(--border); background:var(--surface);
+  }
+  .shots figcaption { font-family:var(--font-mono); font-size:11.5px; color:var(--text-muted); margin-top:9px; line-height:1.4; }
   .live-visual-index { font-family:var(--font-mono); font-size:13px; color:rgba(255,255,255,.72); letter-spacing:.08em; }
   .live-tag, .live-visual-index { position:relative; z-index:2; }
 
@@ -315,6 +317,7 @@
     main { margin-left:0; }
     .hero-grid { grid-template-columns:1fr; }
     .hero-stats-rail { border-left:none; border-top:1px solid rgba(255,255,255,.18); padding-left:0; padding-top:22px; flex-direction:row; flex-wrap:wrap; gap:28px; }
+    .shots { grid-template-columns:1fr; gap:20px; }
     .live-card, .live-card.reverse { grid-template-columns:1fr; }
     .live-card.reverse .live-visual { grid-column:1; grid-row:1; }
     .live-card.reverse .live-info { grid-column:1; grid-row:2; }
@@ -384,22 +387,35 @@
     </div>
 
     <div class="live-card">
-      <div class="live-visual tone-c has-specs">
+      <div class="live-visual tone-c">
+        <!-- eager + high priority: this sits near the top, so lazy-loading it
+             would delay the largest paint instead of helping -->
+        <img class="live-shot" src="assets/finapp-asistente.webp" data-i18n-alt="shot_alt_asistente" alt="El asistente de la app respondiendo preguntas sobre gastos, con la fuente de los datos citada bajo cada respuesta" fetchpriority="high" decoding="async">
         <span class="live-tag"><span class="live-dot"></span><span data-i18n="chip_production">En producción</span></span>
-        <div class="live-specs">
-          <span data-i18n="spec_ai">Asistente AI · Gemini API</span>
-          <span data-i18n="spec_ocr">OCR y PDF en el dispositivo</span>
-          <span data-i18n="spec_db">Supabase · datos aislados por usuario</span>
-        </div>
       </div>
       <div class="live-info">
         <div class="section-label" style="margin:0;" data-i18n="finapp_kicker">Finanzas personales</div>
         <h3 data-i18n="finapp_title">Mis Finanzas Personales</h3>
         <p data-i18n="finapp_desc">Registra saldo, sobres, gastos, tarjetas y préstamos. Lee los movimientos desde notificaciones, extractos PDF y pantallazos —procesados dentro del navegador, sin subir el extracto a ningún servidor— y responde preguntas sobre los gastos: la app calcula las cifras y Gemini solo redacta la respuesta.</p>
         <div class="stack"><span>Lovable</span><span>Supabase</span><span>Gemini API</span><span>Tesseract.js</span><span>pdf.js</span></div>
-        <a class="live-cta" href="https://miappfinpersonal.lovable.app" target="_blank" rel="noopener" data-i18n="finapp_cta">Abrir la app</a>
-        <div class="live-note" data-i18n="finapp_note">Requiere crear una cuenta gratuita</div>
+        <a class="live-cta" href="https://miappfinpersonal.lovable.app/login" target="_blank" rel="noopener" data-i18n="finapp_cta">Ver la demo</a>
+        <div class="live-note" data-i18n="finapp_note">Datos ficticios · sin cuenta: entra con el botón «Ver la demo»</div>
       </div>
+    </div>
+
+    <div class="shots">
+      <figure>
+        <img src="assets/finapp-balance.webp" data-i18n-alt="shot_alt_balance" alt="Pantalla de balance con el dinero libre y los sobres de ahorro con sus metas y cuotas" loading="lazy" decoding="async">
+        <figcaption data-i18n="shot_cap_balance">Balance y sobres: dinero libre separado de lo ya comprometido, con metas y cuotas.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/finapp-smart.webp" data-i18n-alt="shot_alt_smart" alt="Pantalla Smart leyendo un extracto PDF, con el aviso de que el archivo se procesa en el dispositivo" loading="lazy" decoding="async">
+        <figcaption data-i18n="shot_cap_smart">Smart lee extractos PDF, pantallazos y notificaciones dentro del navegador.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/finapp-revision.webp" data-i18n-alt="shot_alt_revision" alt="Movimientos extraídos para revisar, con posibles duplicados y abonos marcados y desmarcados por defecto" loading="lazy" decoding="async">
+        <figcaption data-i18n="shot_cap_revision">Antes de registrar: duplicados y abonos quedan marcados y desmarcados.</figcaption>
+      </figure>
     </div>
   </section>
 
@@ -638,14 +654,18 @@
       product_title: "Una app de finanzas con asistente de AI",
       product_intro: "No es un ejercicio: tiene usuarios, autenticación, cupo de uso y política de datos bajo la Ley 1581. Es donde mejor se ve cómo pienso un producto de punta a punta.",
       chip_production: "En producción",
-      spec_ai: "Asistente AI · Gemini API",
-      spec_ocr: "OCR y PDF en el dispositivo",
-      spec_db: "Supabase · datos aislados por usuario",
+      shot_alt_asistente: "El asistente de la app respondiendo preguntas sobre gastos, con la fuente de los datos citada bajo cada respuesta",
+      shot_alt_balance: "Pantalla de balance con el dinero libre y los sobres de ahorro con sus metas y cuotas",
+      shot_cap_balance: "Balance y sobres: dinero libre separado de lo ya comprometido, con metas y cuotas.",
+      shot_alt_smart: "Pantalla Smart leyendo un extracto PDF, con el aviso de que el archivo se procesa en el dispositivo",
+      shot_cap_smart: "Smart lee extractos PDF, pantallazos y notificaciones dentro del navegador.",
+      shot_alt_revision: "Movimientos extraídos para revisar, con posibles duplicados y abonos marcados y desmarcados por defecto",
+      shot_cap_revision: "Antes de registrar: duplicados y abonos quedan marcados y desmarcados.",
       finapp_kicker: "Finanzas personales",
       finapp_title: "Mis Finanzas Personales",
       finapp_desc: "Registra saldo, sobres, gastos, tarjetas y préstamos. Lee los movimientos desde notificaciones, extractos PDF y pantallazos —procesados dentro del navegador, sin subir el extracto a ningún servidor— y responde preguntas sobre los gastos: la app calcula las cifras y Gemini solo redacta la respuesta.",
-      finapp_cta: "Abrir la app",
-      finapp_note: "Requiere crear una cuenta gratuita",
+      finapp_cta: "Ver la demo",
+      finapp_note: "Datos ficticios · sin cuenta: entra con el botón «Ver la demo»",
 
       live_label: "Prueba técnica",
       live_title: "Dos proyectos, de punta a punta",
@@ -740,14 +760,18 @@
       product_title: "A personal finance app with an AI assistant",
       product_intro: "Not an exercise: it has users, authentication, usage quotas, and a data policy under Colombian data-protection law. It is where you can best see how I think a product through end to end.",
       chip_production: "In production",
-      spec_ai: "AI assistant · Gemini API",
-      spec_ocr: "On-device OCR and PDF parsing",
-      spec_db: "Supabase · per-user data isolation",
+      shot_alt_asistente: "The app's assistant answering questions about spending, citing the data source under each answer",
+      shot_alt_balance: "Balance screen showing free money and savings envelopes with their goals and instalments",
+      shot_cap_balance: "Balance and envelopes: free money kept separate from what is already committed.",
+      shot_alt_smart: "Smart screen reading a PDF statement, with a notice that the file is processed on the device",
+      shot_cap_smart: "Smart reads PDF statements, screenshots, and notifications inside the browser.",
+      shot_alt_revision: "Extracted transactions ready for review, with likely duplicates and payments flagged and left unchecked",
+      shot_cap_revision: "Before saving: duplicates and repayments are flagged and left unchecked.",
       finapp_kicker: "Personal finance",
       finapp_title: "Mis Finanzas Personales",
       finapp_desc: "Tracks balance, envelopes, expenses, cards, and loans. It reads transactions from bank notifications, PDF statements, and screenshots — all parsed inside the browser, with no statement ever uploaded to a server — and answers questions about spending: the app computes the figures and Gemini only writes the answer.",
-      finapp_cta: "Open the app",
-      finapp_note: "Requires a free account",
+      finapp_cta: "Open the demo",
+      finapp_note: "Fictional data · no account: use the \"Ver la demo\" button",
 
       live_label: "Technical interview",
       live_title: "Two projects, end to end",
@@ -880,6 +904,10 @@
     document.querySelectorAll("[data-i18n-aria]").forEach(function (el) {
       var v = dict[el.getAttribute("data-i18n-aria")];
       if (v !== undefined) el.setAttribute("aria-label", v);
+    });
+    document.querySelectorAll("[data-i18n-alt]").forEach(function (el) {
+      var v = dict[el.getAttribute("data-i18n-alt")];
+      if (v !== undefined) el.setAttribute("alt", v);
     });
 
     document.querySelectorAll(".lang-btn").forEach(function (b) {
